@@ -1,0 +1,7 @@
+diagnostic_flows
+diagnostic_steps
+diagnostic_options
+diagnostic_sessions
+diagnostic_answers
+diagnostic_evidence
+diagnostic_results
