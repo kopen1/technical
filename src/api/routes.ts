@@ -85,9 +85,9 @@ export function routes(app: Hono<{Bindings: Env}>) {
     if (!before) {
       const mem = getSession(body.sessionId);
       if (!mem) return c.json({error:"SESSION_NOT_FOUND"},404);
-      restoreSession(mem);
       before = mem;
     }
+    restoreSession(before);
     const beforeCount = before.evidence.length;
     const cases = await listCases(c.env);
     const result = answer(cases, body.sessionId, String(body.value ?? ""));
