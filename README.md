@@ -90,8 +90,10 @@ src/
   seo/seo.ts          sitemap.xml & robots.txt
 public/
   index.html          landing page
-  diagnosis/index.html  halaman publik per kasus
   admin/index.html    dashboard admin
+src/pages/
+  diagnosis.html      sumber halaman kasus (di-embed ke worker via diagnosis.ts)
+  diagnosis.ts        versi embed untuk diserve di /diagnosis/:slug
 migrations/           SQL migrasi D1
 scripts/              test script
 ```

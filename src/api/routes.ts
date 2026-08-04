@@ -44,10 +44,11 @@ export function routes(app: Hono<{Bindings: Env}>) {
         before = loaded;
       }
     }
+    const beforeCount = before?.evidence.length ?? 0;
     const result = answer(body.sessionId, String(body.value ?? ""));
     if (!result) return c.json({error:"SESSION_NOT_FOUND"},404);
 
-    const newEvidence = before && result.session.evidence.length > before.evidence.length
+    const newEvidence = result.session.evidence.length > beforeCount
       ? result.session.evidence.at(-1) : undefined;
 
     if (newEvidence) await saveEvidence(c.env, result.session.id, newEvidence);
