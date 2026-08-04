@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS diagnostic_sessions(id TEXT PRIMARY KEY,flow_id TEXT NOT NULL,device TEXT NOT NULL,symptom TEXT NOT NULL,status TEXT NOT NULL,current_step TEXT,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS diagnostic_evidence(id INTEGER PRIMARY KEY AUTOINCREMENT,session_id TEXT NOT NULL,step_id TEXT NOT NULL,title TEXT NOT NULL,value TEXT,status TEXT,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS diagnostic_results(id INTEGER PRIMARY KEY AUTOINCREMENT,session_id TEXT NOT NULL,fault_group TEXT,verification_status TEXT,notes TEXT,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX IF NOT EXISTS idx_diag_sessions_flow ON diagnostic_sessions(flow_id);
+CREATE INDEX IF NOT EXISTS idx_diag_evidence_session ON diagnostic_evidence(session_id);

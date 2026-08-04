@@ -1,0 +1,34 @@
+import type {DiagnosticFlow} from "../engine/types";
+const f=(id:string,device:string,symptom:string,title:string,groups:string[],steps:any[]):DiagnosticFlow=>({id,device,symptom,title,reference:"Schematic / hardware reference model yang sesuai",faultGroups:groups,steps});
+export const flows:DiagnosticFlow[]=[
+f("samsung-a52-a525f-charging","Samsung A52 A525F","Tidak bisa charging","Samsung A52 — Charging",["charging_ovp_path","charging_input_path"],[
+{id:"observe",title:"Konfirmasi keluhan",instruction:"Colok charger dan amati tanda charging.",why:"Menetapkan kondisi awal.",inputType:"choice",options:["Ada tanda charging","Tidak ada tanda charging"],pass:"vbus",fail:"vbus",unknown:"observe"},
+{id:"vbus",title:"Ukur VBUS",instruction:"Ukur VBUS sesuai hardware reference.",why:"Memastikan tegangan input mencapai board.",inputType:"voltage",unit:"V",testPoint:"VBUS",min:4.5,max:5.5,pass:"ovp",fail:"input",unknown:"vbus"},
+{id:"ovp",title:"Ukur setelah OVP",instruction:"Ukur sisi setelah OVP sesuai schematic.",why:"Membandingkan input dan output proteksi.",inputType:"voltage",unit:"V",testPoint:"AFTER_OVP",min:4.5,max:5.5,pass:"verify",fail:"fault",unknown:"ovp"},
+{id:"input",title:"Periksa input path",instruction:"Telusuri connector/VBUS sesuai reference.",why:"VBUS abnormal mengarahkan pemeriksaan ke input.",inputType:"observation",options:["Normal","Ada masalah"],pass:"verify",fail:"fault",unknown:"input"},
+{id:"fault",title:"Fault group",instruction:"Verifikasi charging/OVP path berdasarkan schematic sebelum tindakan.",why:"Engine memberi kelompok fault, bukan menebak IC.",inputType:"observation",options:["Sudah diverifikasi","Belum"],pass:"verify",fail:"fault",unknown:"fault"},
+{id:"verify",title:"Verification",instruction:"Cek logo charging, arus, dan kenaikan persentase.",why:"Menutup diagnosis dengan hasil terverifikasi.",inputType:"choice",options:["Berhasil","Belum berhasil"],pass:"",fail:"vbus",unknown:"verify"}]),
+f("vivo-y19s-vdd1v85","Vivo Y19s 4G","Mati total / short","Vivo Y19s — VDD1V85 Short",["vdd1v85_short"],[
+{id:"heat",title:"Amati panas",instruction:"Amati board saat charger/PSU sesuai prosedur.",why:"Membantu lokalisasi fault.",inputType:"observation",options:["Panas","Tidak panas"],pass:"rail",fail:"rail",unknown:"heat"},
+{id:"rail",title:"Ukur VDD1V85",instruction:"Ukur rail VDD1V85 sesuai schematic.",why:"Menentukan kondisi rail.",inputType:"resistance",unit:"Ω",testPoint:"VDD1V85",unknown:"rail"},
+{id:"confirm",title:"Konfirmasi thermal",instruction:"Gunakan thermal/rosin sesuai prosedur untuk konfirmasi.",why:"Konfirmasi diperlukan sebelum melepas komponen.",inputType:"observation",options:["Teridentifikasi","Belum"],pass:"verify",fail:"confirm",unknown:"confirm"},
+{id:"verify",title:"Verification",instruction:"Ukur ulang dan tes power setelah tindakan.",why:"Memastikan short hilang dan HP hidup.",inputType:"choice",options:["HP hidup","Masih mati"],pass:"",fail:"rail",unknown:"verify"}]),
+f("redmi-note8-vph","Redmi Note 8","Mati total","Redmi Note 8 — VPH_PWR",["power_path","charger_ic_path"],[
+{id:"vbus",title:"Ukur USB_VBUS",instruction:"Ukur USB_VBUS sesuai board reference.",why:"Memastikan input USB tersedia.",inputType:"voltage",unit:"V",testPoint:"USB_VBUS",min:4.5,max:5.5,pass:"vph",fail:"vbus",unknown:"vbus"},
+{id:"vph",title:"Ukur VPH_PWR",instruction:"Ukur VPH_PWR sesuai board reference.",why:"Mengecek rail power utama.",inputType:"voltage",unit:"V",testPoint:"VPH_PWR",min:3.8,max:4.35,pass:"verify",fail:"charger",unknown:"vph"},
+{id:"charger",title:"Periksa charger path",instruction:"Evaluasi charger IC/path berdasarkan schematic dan evidence.",why:"Abnormal rail membutuhkan verifikasi.",inputType:"observation",options:["Sudah diverifikasi","Belum"],pass:"verify",fail:"charger",unknown:"charger"},
+{id:"verify",title:"Verification",instruction:"Pasang baterai, colok USB, cek charging dan boot.",why:"Memastikan hasil perbaikan.",inputType:"choice",options:["Berhasil","Belum berhasil"],pass:"",fail:"vph",unknown:"verify"}]),
+f("redmi9-restart-rf","Redmi 9","Restart terus","Redmi 9 — Restart",["network_rf_path"],[
+{id:"restart",title:"Konfirmasi restart",instruction:"Pastikan restart tetap terjadi tanpa tombol power.",why:"Mengisolasi gejala dari flex power.",inputType:"observation",options:["Tetap restart","Tidak restart"],pass:"rf",fail:"rf",unknown:"restart"},
+{id:"rf",title:"Periksa RF_MB2_TX_RFIC",instruction:"Ukur jalur sesuai schematic Redmi 9.",why:"Kasus reference mengarah ke network/RF.",inputType:"resistance",unit:"Ω",testPoint:"RF_MB2_TX_RFIC",unknown:"rf"},
+{id:"verify",title:"Verification",instruction:"Uji boot, menu dan sinyal.",why:"Memastikan fungsi terdampak pulih.",inputType:"choice",options:["Normal","Masih restart"],pass:"",fail:"rf",unknown:"verify"}]),
+f("samsung-a326-lcd","Samsung A326 5G","LCD blank hitam","Samsung A32 5G A326 — LCD",["display_mipi_path"],[
+{id:"lcd",title:"Konfirmasi LCD",instruction:"Uji LCD kompatibel. Jika sama, lanjut board.",why:"Mengurangi kemungkinan panel LCD.",inputType:"observation",options:["Tetap blank","LCD normal"],pass:"mipi",fail:"verify",unknown:"lcd"},
+{id:"mipi",title:"Periksa jalur MIPI",instruction:"Ukur jalur connector sesuai schematic, termasuk MIPI_DSI0_CLK_N dan MIPI_DSI0_D1_P.",why:"Jalur display terkait komunikasi panel/CPU.",inputType:"diode",unit:"V",testPoint:"LCD MIPI connector",unknown:"mipi"},
+{id:"verify",title:"Verification",instruction:"Uji kembali LCD setelah tindakan.",why:"Memastikan display pulih.",inputType:"choice",options:["Normal","Masih blank"],pass:"",fail:"mipi",unknown:"verify"}]),
+f("vivo-y12s-short","Vivo Y12s MTK","Mati total / short","Vivo Y12s — Power Short",["power_rail_short"],[
+{id:"current",title:"Amati current",instruction:"Hubungkan USB Doctor/PSU dan catat arus.",why:"Respons arus menjadi evidence awal.",inputType:"current",unit:"A",testPoint:"USB input",unknown:"thermal"},
+{id:"thermal",title:"Cari area panas",instruction:"Gunakan thermal camera/metode thermal yang sesuai.",why:"Membantu melokalisasi sumber short.",inputType:"observation",options:["Teridentifikasi","Belum"],pass:"rail",fail:"thermal",unknown:"thermal"},
+{id:"rail",title:"Telusuri rail power",instruction:"Periksa coil/rail dan ikuti schematic.",why:"Short perlu dipetakan dari rail ke sumber fault.",inputType:"observation",options:["Sudah terlokalisasi","Belum"],pass:"verify",fail:"thermal",unknown:"rail"},
+{id:"verify",title:"Verification",instruction:"Ukur ulang dan tes power setelah tindakan.",why:"Memastikan short hilang dan HP hidup.",inputType:"choice",options:["HP hidup","Masih mati"],pass:"",fail:"rail",unknown:"verify"}])
+];

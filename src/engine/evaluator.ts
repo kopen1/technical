@@ -1,21 +1,3 @@
-import type { DiagnosticStep, EvaluationStatus } from "./types";
-
-export function evaluateMeasurement(
-  step: DiagnosticStep, rawValue: string | number | boolean
-): EvaluationStatus {
-  if (rawValue === "" || rawValue === null || rawValue === undefined) return "UNKNOWN";
-  if (typeof rawValue === "boolean") return rawValue ? "PASS" : "FAIL";
-  const value = Number(rawValue);
-  if (Number.isNaN(value)) return "UNKNOWN";
-  if (typeof step.expectedMin === "number" && typeof step.expectedMax === "number") {
-    return value >= step.expectedMin && value <= step.expectedMax ? "PASS" : "FAIL";
-  }
-  return "UNKNOWN";
-}
-
-export function nextStepFor(step: DiagnosticStep, status: EvaluationStatus): string | null {
-  if (status === "PASS") return step.passNextStepId ?? step.nextStepId ?? null;
-  if (status === "FAIL") return step.failNextStepId ?? null;
-  if (status === "UNKNOWN") return step.unknownNextStepId ?? null;
-  return step.nextStepId ?? null;
-}
+import type {RuleStep,Status} from "./types";
+export function evaluate(s:RuleStep,v:string):Status{if(!v.trim())return"UNKNOWN";if(s.inputType==="choice"||s.inputType==="observation")return"UNKNOWN";const n=Number(v);if(Number.isNaN(n))return"UNKNOWN";if(typeof s.min==="number"&&typeof s.max==="number")return n>=s.min&&n<=s.max?"PASS":"FAIL";return"UNKNOWN";}
+export function next(s:RuleStep,x:Status){return x==="PASS"?s.pass??null:x==="FAIL"?s.fail??null:x==="UNKNOWN"?s.unknown??null:null;}

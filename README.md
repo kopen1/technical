@@ -1,25 +1,19 @@
-# TechniKit Cloudflare v0.1
+# TechniKit V1
+Versi 1 = fondasi lengkap Diagnostic Toolkit berbasis rule, bukan AI.
 
-Stack:
-- Cloudflare Workers
-- TypeScript
-- Hono
-- Cloudflare D1
-- Static Assets
-- Wrangler
+Sudah termasuk:
+- Diagnostic Engine, session, branching, PASS/FAIL/UNKNOWN
+- voltage/current/resistance/diode
+- test point + alasan pemeriksaan
+- evidence + verification
+- 6 kasus nyata yang diberikan
+- Cloudflare Worker + D1 migration
+- UI diagnosis + API
 
-Engine awal sudah membaca rule dan published repair cases dari D1. Enam kasus nyata yang diberikan sebelumnya dijadikan seed data.
+Kasus: Vivo Y12s, Samsung A52 A525F, Vivo Y19s, Samsung A326 5G, Redmi 9, Redmi Note 8.
 
-## Termux
-npm install
-npx wrangler d1 migrations apply technikit --local
-npm run dev
+PENTING: data kasus tidak menggantikan schematic/hardware reference model yang tepat. Detail pin/nilai yang tidak diberikan tidak dibuat-buat.
 
-## Cloudflare
-npx wrangler login
-npx wrangler d1 create technikit
-Masukkan database_id ke wrangler.jsonc.
-npx wrangler d1 migrations apply technikit --remote
-npm run deploy
+Deployment: isi database_id pada wrangler.jsonc. Karena Termux Android sebelumnya mengalami workerd Unsupported platform, gunakan GitHub -> Cloudflare Workers Builds untuk deploy. Jangan taruh API key di source.
 
-Catatan: ganti database_id placeholder sebelum remote migration/deploy.
+Sesudah V1 stabil, modul berikutnya dapat ditambahkan tanpa membongkar engine: admin private, CRUD knowledge base, gambar kasus, schematic/reference link, SEO case pages, analytics, dan modul toko/keuangan.

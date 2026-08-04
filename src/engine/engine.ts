@@ -1,16 +1,2 @@
-import type { DiagnosticStep } from "./types";
-import { evaluateMeasurement, nextStepFor } from "./evaluator";
-import { addAnswer } from "./session";
-
-export function processStep(session: any, step: DiagnosticStep, rawValue: string | number | boolean) {
-  const status = evaluateMeasurement(step, rawValue);
-  addAnswer(session, {
-    stepId: step.id, value: rawValue, status, createdAt: new Date().toISOString()
-  }, {
-    stepId: step.id, label: step.title, value: String(rawValue), status
-  });
-  const nextStepId = nextStepFor(step, status);
-  if (!nextStepId) session.status = "COMPLETED";
-  else session.currentStepId = nextStepId;
-  return { status, nextStepId, completed: session.status === "COMPLETED", session };
-}
+import {evaluate,next} from "./evaluator";import {addEvidence} from "./session";import type {DiagnosticFlow,Session} from "./types";
+export function runStep(flow:DiagnosticFlow,s:Session,value:string){const step=flow.steps.find(x=>x.id===s.currentStep);if(!step)return{error:"STEP_NOT_FOUND" as const};const status=evaluate(step,value);addEvidence(s,{stepId:step.id,title:step.title,value,status,timestamp:new Date().toISOString()});const id=next(step,status);if(!id)s.status="COMPLETED";else s.currentStep=id;return{status,completed:s.status==="COMPLETED",nextStep:id?flow.steps.find(x=>x.id===id)??null:null,session:s};}
