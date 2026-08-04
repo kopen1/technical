@@ -82,9 +82,12 @@ export function routes(app: Hono<{Bindings: Env}>) {
   app.post("/api/diagnosis/answer", async c => {
     const body = await c.req.json<{sessionId:string,value:string}>();
     let before = await loadSession(c.env, body.sessionId);
-    if (!before) before = getSession(body.sessionId);
-    if (!before) return c.json({error:"SESSION_NOT_FOUND"},404);
-    restoreSession(before);
+    if (!before) {
+      const mem = getSession(body.sessionId);
+      if (!mem) return c.json({error:"SESSION_NOT_FOUND"},404);
+      restoreSession(mem);
+      before = mem;
+    }
     const beforeCount = before.evidence.length;
     const cases = await listCases(c.env);
     const result = answer(cases, body.sessionId, String(body.value ?? ""));
