@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "technikit-v3",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-04",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./public"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "technikit-v3",
+      "database_id": "f2277910-a4bc-4326-957e-990d61e7f120"
+    }
+  ]
+}

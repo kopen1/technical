@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TechniKit — Diagnostic Engine Teknisi HP</title>
+<meta name="description" content="Diagnostic Engine TechniKit membantu teknisi mengikuti pemeriksaan HP berdasarkan gejala, test point dan evidence.">
+<meta name="robots" content="index,follow">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f7f8fa;color:#101828}
+header{position:sticky;top:0;z-index:5;background:#ffffffea;backdrop-filter:blur(12px);border-bottom:1px solid #eaecf0}
+nav{max-width:1180px;margin:auto;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:21px;font-weight:900}nav a{color:#344054;text-decoration:none;margin-left:18px}
+.hero{max-width:1180px;margin:auto;padding:80px 20px 60px;display:grid;grid-template-columns:1.1fr .9fr;gap:55px;align-items:center}
+.eyebrow{font-weight:800;letter-spacing:.08em;font-size:12px;color:#475467}.hero h1{font-size:clamp(42px,6vw,70px);line-height:1.02;margin:14px 0}.hero p{font-size:19px;line-height:1.65;color:#667085}
+.btn{display:inline-block;border:0;border-radius:12px;padding:14px 18px;background:#101828;color:#fff;font-weight:800;text-decoration:none;cursor:pointer}.btn.secondary{background:#fff;color:#101828;border:1px solid #d0d5dd}
+.panel,.card{background:#fff;border:1px solid #eaecf0;border-radius:20px;padding:22px}.panel{box-shadow:0 20px 60px rgba(16,24,40,.10)}section{max-width:1180px;margin:auto;padding:45px 20px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.muted{color:#667085}.case{min-height:190px}select,input{width:100%;padding:13px;border:1px solid #d0d5dd;border-radius:10px;margin:6px 0}.result{margin-top:18px}
+footer{padding:45px 20px;text-align:center;color:#667085;border-top:1px solid #eaecf0}
+@media(max-width:780px){.hero{grid-template-columns:1fr;padding-top:45px}.grid{grid-template-columns:1fr}nav a{display:none}}
+</style>
+</head>
+<body>
+<header><nav><div class="brand">🔧 TechniKit</div><div><a href="#engine">Engine</a><a href="#cases">Kasus</a><a href="/admin/">Admin</a></div></nav></header>
+<section class="hero">
+<div><div class="eyebrow">DIAGNOSTIC KNOWLEDGE PLATFORM</div>
+<h1>Jangan menebak. <br>Ikuti jalurnya.</h1>
+<p>Mulai dari gejala, lakukan pemeriksaan, masukkan evidence, lalu ikuti langkah berikutnya. TechniKit dibangun untuk membantu teknisi belajar dari kasus nyata.</p>
+<a class="btn" href="#engine">🔧 Mulai Diagnosis</a>
+<a class="btn secondary" href="#cases">Lihat Kasus</a></div>
+<div class="panel"><h2>Engine sekarang</h2><p class="muted">Pilih kasus dan lakukan pemeriksaan langkah demi langkah.</p><div id="quick"></div></div>
+</section>
+<section id="engine"><h2>Diagnostic Engine</h2><p class="muted">Rule-based, transparan, dan tidak mengarang nilai reference.</p>
+<div class="card"><select id="caseSelect"></select><button class="btn" onclick="begin()">Mulai pemeriksaan</button><div id="diagnosis" class="result"></div></div></section>
+<section id="cases"><h2>Kasus awal</h2><div class="grid" id="cards"></div></section>
+<footer>TechniKit V3 — Diagnostic knowledge platform</footer>
+<script>
+let all=[],session=null,step=null;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+async function init(){
+ all=await (await fetch("/api/cases")).json();
+ caseSelect.innerHTML=all.map(x=>`<option value="${x.id}">${esc(x.model)} — ${esc(x.symptom)}</option>`).join("");
+ cards.innerHTML=all.map(x=>`<article class="card case"><small>${esc(x.brand)} · ${esc(x.model)}</small><h3>${esc(x.title)}</h3><p class="muted">${esc(x.summary)}</p><a href="/diagnosis/${esc(x.slug)}">Buka dokumentasi →</a></article>`).join("");
+ quick.innerHTML=all.slice(0,4).map(x=>`<p>✓ ${esc(x.model)} — ${esc(x.symptom)}</p>`).join("");
+}
+async function begin(){
+ const r=await fetch("/api/diagnosis/start",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({caseId:caseSelect.value})});
+ const d=await r.json();session=d.session;step=d.step;render();
+}
+function render(){
+ if(!step){diagnosis.innerHTML=`<div class="card"><h3>Diagnosis selesai ✓</h3><p>Evidence pemeriksaan telah dicatat.</p><button class="btn" onclick="location.reload()">Kasus baru</button></div>`;return;}
+ diagnosis.innerHTML=`<div class="card"><h3>${esc(step.title)}</h3><p>${esc(step.instruction)}</p><p><b>Metode:</b> ${esc(step.method)} ${step.testPoint?` · <b>Test Point:</b> ${esc(step.testPoint)}`:""}</p><input id="measurement" placeholder="Masukkan hasil pemeriksaan"><button class="btn" onclick="nextStep()">Lanjut</button></div>`;
+}
+async function nextStep(){
+ const value=measurement.value.trim();if(!value)return;
+ const r=await fetch("/api/diagnosis/answer",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:session.id,value})});
+ const d=await r.json();step=d.step;render();
+}
+init();
+fetch("/api/analytics/visit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({path:location.pathname,referrer:document.referrer})}).catch(()=>{});
+</script>
+</body></html>
