@@ -1,0 +1,13 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TechniKit Diagnostic Engine</title>
+<style>body{font-family:system-ui,sans-serif;max-width:900px;margin:auto;padding:20px;background:#0b1020;color:#eef2ff}section{background:#151d33;border:1px solid #293552;border-radius:15px;padding:18px;margin:14px 0}select,input,button{font:inherit;padding:10px;border-radius:9px;border:1px solid #52617e;margin-top:5px}select,input{width:100%;box-sizing:border-box}button{cursor:pointer}li{margin:8px 0}.muted{opacity:.7}</style></head>
+<body><h1>TechniKit</h1><p class="muted">Diagnostic Engine v0.1 — Rule + Evidence, bukan AI.</p>
+<section><label>Device<select id="device"><option value="">Semua model</option></select></label><br>
+<label>Symptom<select id="symptom"><option>Mati total</option><option>Getar saja</option><option>Restart</option><option>Tidak bisa charging</option><option>LCD blank</option></select></label><br>
+<label>Observation tambahan<input id="observation" placeholder="contoh: mesin panas"></label><br><button onclick="run()">Mulai diagnosis</button></section>
+<div id="result"></div>
+<script>
+async function load(){let r=await fetch('/api/devices'),d=await r.json(),s=document.querySelector('#device');d.forEach(x=>{let o=document.createElement('option');o.value=x.id;o.textContent=`${x.brand} ${x.model} ${x.variant||''}`;s.appendChild(o)})}
+async function run(){let p=new URLSearchParams({symptom:symptom.value,observation:observation.value,device_id:device.value});let x=await (await fetch('/api/diagnose?'+p)).json();
+result.innerHTML='<section><h2>'+x.status+'</h2><h3>Langkah awal</h3><ol>'+x.initial_steps.map(v=>'<li>'+v+'</li>').join('')+'</ol><h3>Rule</h3>'+(x.matched_rules.length?x.matched_rules.map(v=>'<p><b>'+v.name+'</b><br>'+v.next_step+'<br>'+v.rationale+'</p>').join(''):'<p>Belum ada rule yang cocok dengan input.</p>')+'<h3>Kasus nyata terkait</h3>'+(x.related_published_cases.length?x.related_published_cases.map(v=>'<p><b>'+v.brand+' '+v.model+'</b><br>'+v.observation+'<br><b>Diagnosis:</b> '+v.diagnosis+'<br><b>Action:</b> '+v.action+'<br><b>Verification:</b> '+v.verification+'</p>').join(''):'<p>Belum ada kasus published untuk symptom ini.</p>')+'</section>'}
+load()
+</script></body></html>
