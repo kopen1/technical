@@ -1,21 +1,89 @@
 <!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TechniKit Admin V3</title><style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui;background:#f3f4f6;color:#111827}.shell{display:flex;min-height:100vh}.side{width:250px;background:#101828;color:white;padding:20px}.brand{font-weight:900;font-size:20px;margin-bottom:24px}.nav button{display:block;width:100%;border:0;background:transparent;color:#d0d5dd;text-align:left;padding:11px;border-radius:9px;margin:3px 0;cursor:pointer}.nav button:hover{background:#1d2939;color:white}.main{flex:1;padding:25px;max-width:1250px}.card{background:white;border:1px solid #e4e7ec;border-radius:15px;padding:20px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.num{font-size:30px;font-weight:900}.primary{padding:9px 12px;background:#101828;color:#fff;border:0;border-radius:8px;cursor:pointer}.danger{background:#b42318}.hidden{display:none}input{padding:11px;border:1px solid #d0d5dd;border-radius:8px;margin:4px}.toggle{margin-left:8px}@media(max-width:700px){.side{width:72px}.brand{font-size:0}.brand:after{content:"🔧";font-size:22px}.nav button{font-size:0}.nav button:before{content:"•";font-size:20px}.main{padding:12px}.grid{grid-template-columns:1fr 1fr}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui;background:#f3f4f6;color:#111827}.shell{display:flex;min-height:100vh}.side{width:250px;background:#101828;color:white;padding:20px}.brand{font-weight:900;font-size:20px;margin-bottom:24px}.nav button{display:block;width:100%;border:0;background:transparent;color:#d0d5dd;text-align:left;padding:11px;border-radius:9px;margin:3px 0;cursor:pointer}.nav button:hover{background:#1d2939;color:white}.main{flex:1;padding:25px;max-width:1250px}.card{background:white;border:1px solid #e4e7ec;border-radius:15px;padding:20px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.num{font-size:30px;font-weight:900}.primary{padding:9px 12px;background:#101828;color:#fff;border:0;border-radius:8px;cursor:pointer}.danger{background:#b42318}.ghost{background:#fff;color:#101828;border:1px solid #d0d5dd}.hidden{display:none}input,select,textarea{padding:10px;border:1px solid #d0d5dd;border-radius:8px;margin:4px 0;font:inherit}textarea{width:100%;resize:vertical}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #eef0f3;font-size:14px}th{color:#667085;font-size:12px;text-transform:uppercase}.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}.b-verified{background:#d1fadf;color:#067647}.b-community{background:#eff8ff;color:#175cd3}.b-external{background:#fef0c7;color:#b54708}.b-unknown{background:#f2f4f7;color:#475467}.field{display:flex;flex-direction:column;margin:8px 0}.field label{font-size:12px;color:#475467;font-weight:700;margin-bottom:3px}.row{display:flex;gap:10px}.row>div{flex:1}.stepRow{border:1px dashed #d0d5dd;border-radius:10px;padding:10px;margin:8px 0}.toggle{margin-left:8px}@media(max-width:700px){.side{width:72px}.brand{font-size:0}.brand:after{content:"🔧";font-size:22px}.nav button{font-size:0}.nav button:before{content:"•";font-size:20px}.main{padding:12px}.grid{grid-template-columns:1fr 1fr}.row{flex-direction:column}}
 </style></head><body><div class="shell"><aside class="side"><div class="brand">TechniKit Admin</div><div id="nav" class="nav"></div></aside><main class="main">
 <div id="loginBox" class="card"><h2>Private Admin</h2><p>Admin API memakai credential server-side.</p><input id="username" placeholder="Username"><input id="password" type="password" placeholder="Password"><button class="primary" onclick="login()">Login</button><p id="loginError"></p></div>
 <div id="app" class="hidden"><div id="content"></div></div></main></div><script>
-let auth="",pages=[];
+let auth="",pages=[],cases=[],editing=null;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const METHODS=["observation","voltage","resistance","diode","continuity","current","thermal"];
+const SOURCES=["verified","community","external","unknown"];
+const METHOD_LABEL={observation:"Observasi",voltage:"Voltage",resistance:"Resistance",diode:"Diode",continuity:"Kontinuitas",current:"Arus",thermal:"Thermal"};
+const SRC_LABEL={verified:"Verified",community:"Community",external:"External",unknown:"Unknown"};
 async function login(){auth="Bearer "+btoa(username.value+":"+password.value);let r=await fetch("/api/admin/pages",{headers:{Authorization:auth}});if(!r.ok){loginError.textContent="Login gagal.";return}pages=await r.json();loginBox.classList.add("hidden");app.classList.remove("hidden");drawNav();show("dashboard")}
 function drawNav(){nav.innerHTML=pages.filter(p=>p.nav_visible&&p.enabled).map(p=>`<button onclick="show('${esc(p.page_key)}')">${esc(p.label)}</button>`).join("")}
 async function api(url,opts={}){opts.headers={...(opts.headers||{}),Authorization:auth};return (await fetch(url,opts)).json()}
+function srcBadge(s){return `<span class="badge b-${esc(s||"unknown")}">${esc(SRC_LABEL[s]||"Unknown")}</span>`}
 async function show(k){
  if(k==="dashboard"){let d=await api("/api/admin/overview");content.innerHTML=`<h1>Dashboard</h1><div class="grid"><div class="card">Cases<div class="num">${d.cases}</div></div><div class="card">Sessions<div class="num">${d.sessions}</div></div><div class="card">Evidence<div class="num">${d.evidence}</div></div><div class="card">Visits<div class="num">${d.visits}</div></div></div>`}
  else if(k==="analytics"){let d=await api("/api/admin/analytics");content.innerHTML=`<h1>Analytics</h1><div class="card"><h3>Pengunjung berdasarkan negara</h3>${d.countries.map(x=>`<p>${esc(x.country)} — ${x.total}</p>`).join("")}<h3>Halaman</h3>${d.paths.map(x=>`<p>${esc(x.path)} — ${x.total}</p>`).join("")}</div>`}
  else if(k==="settings"){content.innerHTML=`<h1>Admin Navigation & Modules</h1><div class="card"><p><b>Nav Visible</b> = menu terlihat. <b>Enabled</b> = modul aktif. Menyembunyikan menu bukan security.</p>${pages.map(p=>`<div style="padding:10px 0;border-bottom:1px solid #eee"><b>${esc(p.label)}</b><button class="primary toggle" onclick="changePage('${esc(p.page_key)}',{navVisible:${p.nav_visible?0:1}})">${p.nav_visible?"Hide nav":"Show nav"}</button><button class="primary toggle" onclick="changePage('${esc(p.page_key)}',{enabled:${p.enabled?0:1}})">${p.enabled?"Disable":"Enable"}</button></div>`).join("")}</div>`}
- else if(k==="cases"){let d=await (await fetch("/api/cases")).json();content.innerHTML=`<h1>Cases</h1>${d.map(x=>`<div class="card"><b>${esc(x.title)}</b><p>${esc(x.summary)}</p></div>`).join("")}`}
+ else if(k==="cases"){cases=await api("/api/admin/cases");renderCases()}
  else if(k==="engine"){content.innerHTML=`<h1>Diagnostic Engine</h1><div class="card">Rule-based engine aktif. Evidence disimpan ke D1.</div>`}
  else if(k==="visual"){content.innerHTML=`<h1>Visual Reference</h1><div class="card">Modul siap. Tahap berikutnya: upload board image, schematic reference, pin/test-point annotation dan verifikasi admin.</div>`}
  else if(k==="seo"){content.innerHTML=`<h1>SEO</h1><div class="card"><p>Sitemap: <a href="/sitemap.xml" target="_blank">/sitemap.xml</a></p><p>Robots: <a href="/robots.txt" target="_blank">/robots.txt</a></p></div>`}
 }
+function renderCases(){
+ content.innerHTML=`<h1>Cases <span style="font-weight:400;color:#667085">(${cases.length})</span></h1>
+ <div class="card" style="display:flex;gap:10px;align-items:center"><input id="caseFilter" style="flex:1" placeholder="Cari brand / model / gejala..." oninput="renderCaseList()"></div>
+ <div id="caseList"></div>
+ <button class="primary" onclick="editCase(null)">+ Tambah kasus</button>
+ <div id="caseEditor"></div>`;
+ renderCaseList();
+}
+function renderCaseList(){
+ const q=(caseFilter.value||"").toLowerCase();
+ const list=cases.filter(c=>!q||(c.brand+" "+c.model+" "+c.symptom+" "+c.title).toLowerCase().includes(q));
+ document.getElementById("caseList").innerHTML=`<div class="card"><table><thead><tr><th>Brand</th><th>Model</th><th>Gejala</th><th>Source</th><th>Steps</th><th></th></tr></thead><tbody>${
+  list.map(c=>`<tr><td>${esc(c.brand)}</td><td><b>${esc(c.model)}</b><br><small>${esc(c.title)}</small></td><td>${esc(c.symptom)}</td><td>${srcBadge(c.source)}</td><td>${c.steps.length}</td><td><button class="primary toggle" onclick="editCase('${esc(c.id)}')">Edit</button><button class="danger toggle" onclick="delCase('${esc(c.id)}')">Hapus</button></td></tr>`).join("")
+ }</tbody></table></div>`;
+}
+function editCase(id){
+ editing=id?cases.find(c=>c.id===id):null;
+ const c=editing||{brand:"",model:"",symptom:"",faultGroup:"",title:"",summary:"",source:"community",steps:[]};
+ document.getElementById("caseEditor").innerHTML=`<div class="card"><h3>${editing?"Edit kasus":"Tambah kasus"}</h3>
+ <div class="row"><div class="field"><label>Brand</label><input id="f-brand" value="${esc(c.brand)}"></div><div class="field"><label>Model</label><input id="f-model" value="${esc(c.model)}"></div></div>
+ <div class="row"><div class="field"><label>Gejala (symptom)</label><input id="f-symptom" value="${esc(c.symptom)}"></div><div class="field"><label>Fault group</label><input id="f-fault" value="${esc(c.faultGroup)}"></div></div>
+ <div class="field"><label>Judul</label><input id="f-title" value="${esc(c.title)}"></div>
+ <div class="field"><label>Ringkasan</label><textarea id="f-summary" rows="2">${esc(c.summary)}</textarea></div>
+ <div class="field"><label>Source</label><select id="f-source">${SOURCES.map(s=>`<option value="${s}" ${c.source===s?"selected":""}>${SRC_LABEL[s]}</option>`).join("")}</select></div>
+ <h3>Langkah pemeriksaan</h3><div id="stepRows">${c.steps.map((s,i)=>stepRow(s,i)).join("")}</div>
+ <button class="ghost" onclick="addStep()">+ Tambah langkah</button><br><br>
+ <button class="primary" onclick="saveCase()">Simpan</button> <button class="ghost" onclick="renderCases()">Batal</button></div>`;
+}
+function stepRow(s,i){
+ return `<div class="stepRow"><div class="row">
+  <div class="field"><label>Judul langkah</label><input data-step="title" data-i="${i}" value="${esc(s.title||"")}"></div>
+  <div class="field"><label>Metode</label><select data-step="method" data-i="${i}">${METHODS.map(m=>`<option value="${m}" ${s.method===m?"selected":""}>${METHOD_LABEL[m]}</option>`).join("")}</select></div>
+  <div class="field"><label>Test point (opsional)</label><input data-step="testPoint" data-i="${i}" value="${esc(s.testPoint||"")}"></div></div>
+  <div class="row"><div class="field"><label>Instruksi</label><input data-step="instruction" data-i="${i}" value="${esc(s.instruction||"")}"></div></div>
+  <button class="danger toggle" onclick="removeStep(${i})">Hapus langkah</button></div>`;
+}
+function addStep(){const rows=document.getElementById("stepRows");rows.insertAdjacentHTML("beforeend",stepRow({method:"observation"},rows.children.length))}
+function removeStep(i){const rows=[...document.querySelectorAll("#stepRows .stepRow")];rows[i].remove()}
+function saveCase(){
+ const steps=[...document.querySelectorAll("#stepRows .stepRow")].map((r,i)=>({
+  id:"s"+(i+1),
+  title:r.querySelector('[data-step="title"]').value.trim(),
+  instruction:r.querySelector('[data-step="instruction"]').value.trim(),
+  method:r.querySelector('[data-step="method"]').value,
+  testPoint:r.querySelector('[data-step="testPoint"]').value.trim()||undefined
+ }));
+ const body={id:editing?.id,slug:(editing?editing.slug:document.getElementById("f-title").value).toLowerCase().replace(/\s+/g,"-"),
+  brand:document.getElementById("f-brand").value.trim(),
+  model:document.getElementById("f-model").value.trim(),
+  symptom:document.getElementById("f-symptom").value.trim(),
+  faultGroup:document.getElementById("f-fault").value.trim(),
+  title:document.getElementById("f-title").value.trim(),
+  summary:document.getElementById("f-summary").value.trim(),
+  source:document.getElementById("f-source").value,steps};
+ if(!body.brand||!body.model||!body.symptom||!body.title||!steps.length){alert("Lengkapi field wajib (brand, model, gejala, judul, minimal 1 langkah).");return}
+ (async()=>{
+  let r;
+  if(editing){r=await api("/api/admin/cases/"+encodeURIComponent(editing.id),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})}
+  else{r=await api("/api/admin/cases",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})}
+  if(r.ok){show("cases")}else{alert("Gagal simpan: "+(r.error||"unknown"))}
+ })();
+}
+async function delCase(id){if(!confirm("Hapus kasus ini?"))return;const r=await api("/api/admin/cases/"+encodeURIComponent(id),{method:"DELETE"});if(r.ok){cases=cases.filter(c=>c.id!==id);renderCases()}else{alert("Gagal hapus")}}
 async function changePage(key,body){await api("/api/admin/pages/"+key,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});pages=await api("/api/admin/pages");drawNav();show("settings")}
 </script></body></html>

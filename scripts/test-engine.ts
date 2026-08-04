@@ -15,11 +15,12 @@ check(
   "seed: step id unik per kasus",
   SEED_CASES.every(c => new Set(c.steps.map(s => s.id)).size === c.steps.length)
 );
+check("seed: semua punya source", SEED_CASES.every(c => !!c.source));
 
-const results = searchCases("A52", "charging");
+const results = searchCases(SEED_CASES, "A52", "charging");
 check("search: model A52 + symptom charging ketemu", results.some(c => c.id === "sam-a52-charge"));
 
-const bySymptom = searchCases("", "mati total");
+const bySymptom = searchCases(SEED_CASES, "", "mati total");
 check(
   "search: symptom 'mati total' urut skor",
   bySymptom[0].faultGroup === "power_short" || bySymptom[0].faultGroup === "power_path",
@@ -27,22 +28,23 @@ check(
 );
 
 const target = SEED_CASES[0];
-const started = start(target.id)!;
+const started = start(SEED_CASES, target.id)!;
 check("start: session dibuat", !!started.session.id && started.session.caseId === target.id);
 check("start: step pertama diberikan", started.step?.id === target.steps[0].id);
+check("start: total steps", started.total === target.steps.length);
 
-const invalid = start("tidak-ada");
+const invalid = start(SEED_CASES, "tidak-ada");
 check("start: caseId invalid -> null", invalid === null);
 
 let cur = started!;
 for (const step of target.steps) {
-  cur = answer(cur.session.id, "OK")!;
+  cur = answer(SEED_CASES, cur.session.id, "OK")!;
 }
 check("answer: semua step selesai", cur.done === true);
 check("answer: status DONE", cur.session.status === "DONE");
 check("answer: evidence terisi", cur.session.evidence.length === target.steps.length);
 
-const bogus = answer("sessi-tidak-ada", "x");
+const bogus = answer(SEED_CASES, "sessi-tidak-ada", "x");
 check("answer: sessionId invalid -> null", bogus === null);
 
 const s = getSession(cur.session.id);

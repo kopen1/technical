@@ -1,6 +1,6 @@
 import type { Hono } from "hono";
 import type { Env } from "../env";
-import { SEED_CASES } from "../data/seed";
+import { listCases } from "../db/cases";
 
 export function seo(app: Hono<{Bindings: Env}>) {
   app.get("/robots.txt", c => {
@@ -12,9 +12,10 @@ Disallow: /api/admin/
 Sitemap: ${origin}/sitemap.xml`);
   });
 
-  app.get("/sitemap.xml", c => {
+  app.get("/sitemap.xml", async c => {
     const origin = new URL(c.req.url).origin;
-    const urls = ["/", ...SEED_CASES.map(x => `/diagnosis/${x.slug}`)];
+    const cases = await listCases(c.env);
+    const urls = ["/", ...cases.map(x => `/diagnosis/${x.slug}`)];
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(u => `<url><loc>${origin}${u}</loc></url>`).join("\n")}

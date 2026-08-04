@@ -13,7 +13,10 @@ nav{max-width:1180px;margin:auto;padding:16px 20px;display:flex;align-items:cent
 .hero{max-width:1180px;margin:auto;padding:80px 20px 60px;display:grid;grid-template-columns:1.1fr .9fr;gap:55px;align-items:center}
 .eyebrow{font-weight:800;letter-spacing:.08em;font-size:12px;color:#475467}.hero h1{font-size:clamp(42px,6vw,70px);line-height:1.02;margin:14px 0}.hero p{font-size:19px;line-height:1.65;color:#667085}
 .btn{display:inline-block;border:0;border-radius:12px;padding:14px 18px;background:#101828;color:#fff;font-weight:800;text-decoration:none;cursor:pointer}.btn.secondary{background:#fff;color:#101828;border:1px solid #d0d5dd}
-.panel,.card{background:#fff;border:1px solid #eaecf0;border-radius:20px;padding:22px}.panel{box-shadow:0 20px 60px rgba(16,24,40,.10)}section{max-width:1180px;margin:auto;padding:45px 20px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.muted{color:#667085}.case{min-height:190px}select,input{width:100%;padding:13px;border:1px solid #d0d5dd;border-radius:10px;margin:6px 0}.result{margin-top:18px}
+.panel,.card{background:#fff;border:1px solid #eaecf0;border-radius:20px;padding:22px}.panel{box-shadow:0 20px 60px rgba(16,24,40,.10)}section{max-width:1180px;margin:auto;padding:45px 20px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.muted{color:#667085}.case{min-height:190px;display:flex;flex-direction:column}select,input{width:100%;padding:13px;border:1px solid #d0d5dd;border-radius:10px;margin:6px 0}.result{margin-top:18px}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;align-self:flex-start;margin-bottom:8px}
+.b-verified{background:#d1fadf;color:#067647}.b-community{background:#eff8ff;color:#175cd3}.b-external{background:#fef0c7;color:#b54708}.b-unknown{background:#f2f4f7;color:#475467}
+.toolbar{display:flex;gap:12px;align-items:center;margin-bottom:16px}.toolbar select{width:auto;flex:1;max-width:320px}
 footer{padding:45px 20px;text-align:center;color:#667085;border-top:1px solid #eaecf0}
 @media(max-width:780px){.hero{grid-template-columns:1fr;padding-top:45px}.grid{grid-template-columns:1fr}nav a{display:none}}
 </style>
@@ -30,16 +33,30 @@ footer{padding:45px 20px;text-align:center;color:#667085;border-top:1px solid #e
 </section>
 <section id="engine"><h2>Diagnostic Engine</h2><p class="muted">Rule-based, transparan, dan tidak mengarang nilai reference.</p>
 <div class="card"><select id="caseSelect"></select><button class="btn" onclick="begin()">Mulai pemeriksaan</button><div id="diagnosis" class="result"></div></div></section>
-<section id="cases"><h2>Kasus awal</h2><div class="grid" id="cards"></div></section>
+<section id="cases">
+<h2>Kasus <span id="caseCount" class="muted" style="font-weight:400"></span></h2>
+<div class="toolbar"><select id="brandFilter" onchange="renderCards()"><option value="">Semua brand</option></select></div>
+<div class="grid" id="cards"></div>
+</section>
 <footer>TechniKit V3 — Diagnostic knowledge platform</footer>
 <script>
 let all=[],session=null,step=null;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const SRC_LABEL={verified:"Verified",community:"Community",external:"External",unknown:"Unknown"};
+function srcBadge(s){return `<span class="badge b-${esc(s||"unknown")}">${esc(SRC_LABEL[s]||"Unknown")}</span>`}
 async function init(){
  all=await (await fetch("/api/cases")).json();
  caseSelect.innerHTML=all.map(x=>`<option value="${x.id}">${esc(x.model)} — ${esc(x.symptom)}</option>`).join("");
- cards.innerHTML=all.map(x=>`<article class="card case"><small>${esc(x.brand)} · ${esc(x.model)}</small><h3>${esc(x.title)}</h3><p class="muted">${esc(x.summary)}</p><a href="/diagnosis/${esc(x.slug)}">Buka dokumentasi →</a></article>`).join("");
+ caseCount.textContent="("+all.length+" kasus)";
+ const brands=[...new Set(all.map(x=>x.brand).filter(Boolean))].sort();
+ brandFilter.innerHTML='<option value="">Semua brand</option>'+brands.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join("");
+ renderCards();
  quick.innerHTML=all.slice(0,4).map(x=>`<p>✓ ${esc(x.model)} — ${esc(x.symptom)}</p>`).join("");
+}
+function renderCards(){
+ const q=brandFilter.value;
+ const list=q?all.filter(x=>x.brand===q):all;
+ cards.innerHTML=list.map(x=>`<article class="card case">${srcBadge(x.source)}<small>${esc(x.brand)} · ${esc(x.model)}</small><h3>${esc(x.title)}</h3><p class="muted">${esc(x.summary)}</p><a href="/diagnosis/${esc(x.slug)}">Buka dokumentasi →</a></article>`).join("");
 }
 async function begin(){
  const r=await fetch("/api/diagnosis/start",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({caseId:caseSelect.value})});
