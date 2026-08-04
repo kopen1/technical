@@ -1,8 +1,8 @@
 import type { Hono } from "hono";
 import type { Env } from "../env";
 import { SEED_CASES } from "../data/seed";
-import { answer, getSession, searchCases, start } from "../engine/engine";
-import { saveEvidence, saveSession } from "../db/db";
+import { answer, getSession, restoreSession, searchCases, start } from "../engine/engine";
+import { loadSession, saveEvidence, saveSession } from "../db/db";
 import { requireAdmin } from "../auth/admin";
 
 export function routes(app: Hono<{Bindings: Env}>) {
@@ -36,7 +36,14 @@ export function routes(app: Hono<{Bindings: Env}>) {
 
   app.post("/api/diagnosis/answer", async c => {
     const body = await c.req.json<{sessionId:string,value:string}>();
-    const before = getSession(body.sessionId);
+    let before = getSession(body.sessionId);
+    if (!before) {
+      const loaded = await loadSession(c.env, body.sessionId);
+      if (loaded) {
+        restoreSession(loaded);
+        before = loaded;
+      }
+    }
     const result = answer(body.sessionId, String(body.value ?? ""));
     if (!result) return c.json({error:"SESSION_NOT_FOUND"},404);
 

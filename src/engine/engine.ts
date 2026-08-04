@@ -77,3 +77,7 @@ export function answer(sessionId: string, value: string) {
 export function getSession(id: string) {
   return sessions.get(id);
 }
+
+export function restoreSession(s: DiagnosisSession) {
+  sessions.set(s.id, s);
+}
