@@ -1,16 +1,21 @@
-import { Diagnostic, Result } from './types';
+import type { DiagnosticStep, EvaluationStatus } from "./types";
 
-export async function evaluate(input: string): Promise<Result> {
-  // Placeholder evaluator: replace with real logic.
-  try {
-    const output = `Evaluated: ${input}`;
-    return { success: true, output };
-  } catch (err: any) {
-    return { success: false, errors: [err?.message ?? String(err)] };
+export function evaluateMeasurement(
+  step: DiagnosticStep, rawValue: string | number | boolean
+): EvaluationStatus {
+  if (rawValue === "" || rawValue === null || rawValue === undefined) return "UNKNOWN";
+  if (typeof rawValue === "boolean") return rawValue ? "PASS" : "FAIL";
+  const value = Number(rawValue);
+  if (Number.isNaN(value)) return "UNKNOWN";
+  if (typeof step.expectedMin === "number" && typeof step.expectedMax === "number") {
+    return value >= step.expectedMin && value <= step.expectedMax ? "PASS" : "FAIL";
   }
+  return "UNKNOWN";
 }
 
-export async function runDiagnostic(diag: Diagnostic): Promise<Diagnostic> {
-  const res = await evaluate(diag.input);
-  return { ...diag, result: res.output };
+export function nextStepFor(step: DiagnosticStep, status: EvaluationStatus): string | null {
+  if (status === "PASS") return step.passNextStepId ?? step.nextStepId ?? null;
+  if (status === "FAIL") return step.failNextStepId ?? null;
+  if (status === "UNKNOWN") return step.unknownNextStepId ?? null;
+  return step.nextStepId ?? null;
 }

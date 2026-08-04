@@ -1,26 +1,13 @@
-import { Session, Diagnostic } from './types';
+import type { DiagnosticSession, StepAnswer, DiagnosticEvidence } from "./types";
 
-export class SessionManager {
-  private sessions = new Map<string, Session>();
+export function createSession(flowId: string, device: string, symptom: string, firstStepId: string): DiagnosticSession {
+  return {
+    id: crypto.randomUUID(), flowId, device, symptom, currentStepId: firstStepId,
+    answers: [], evidence: [], status: "ACTIVE"
+  };
+}
 
-  createSession(id: string): Session {
-    const session: Session = { id, startedAt: new Date().toISOString(), diagnostics: [] };
-    this.sessions.set(id, session);
-    return session;
-  }
-
-  getSession(id: string): Session | undefined {
-    return this.sessions.get(id);
-  }
-
-  addDiagnostic(sessionId: string, diag: Diagnostic): Session | undefined {
-    const s = this.sessions.get(sessionId);
-    if (!s) return undefined;
-    s.diagnostics.push(diag);
-    return s;
-  }
-
-  closeSession(id: string): boolean {
-    return this.sessions.delete(id);
-  }
+export function addAnswer(session: DiagnosticSession, answer: StepAnswer, evidence?: DiagnosticEvidence) {
+  session.answers.push(answer);
+  if (evidence) session.evidence.push(evidence);
 }
