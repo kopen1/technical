@@ -7,6 +7,9 @@ import diagnosisHtml from "./pages/diagnosis";
 
 const app = new Hono<{Bindings:Env}>();
 app.use("*", cors());
+app.onError((err, c) => {
+  return c.json({ error: "INTERNAL", message: err instanceof Error ? err.message : String(err) }, 500);
+});
 routes(app);
 seo(app);
 
