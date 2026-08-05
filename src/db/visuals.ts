@@ -116,7 +116,10 @@ export async function updateVisual(
 ) {
   const cur = await getVisual(env, id);
   if (!cur) return null;
-  const next = { ...cur, ...fields };
+  const next = { ...cur };
+  for (const [k, v] of Object.entries(fields)) {
+    if (v !== undefined) (next as any)[k] = v;
+  }
   await env.DB.prepare(`
     UPDATE visual_references SET
       image_type=?, caption=?, source=?, verification_status=?,
