@@ -80,9 +80,8 @@ export function routes(app: Hono<{Bindings: Env}>) {
     return c.json({ ...item, visuals });
   });
 
-  app.get("/api/images/*", async c => {
-    const id = c.req.param("*");
-    const img = await getImage(c.env, id!);
+  app.get("/api/images/:id", async c => {
+    const img = await getImage(c.env, c.req.param("id")!);
     if (!img) return c.json({error:"NOT_FOUND"},404);
     return new Response(img.data, {
       headers: {
