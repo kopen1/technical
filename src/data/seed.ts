@@ -1,6 +1,15 @@
 export type CaseSource = "verified" | "community" | "external" | "unknown";
 export type CaseStatus = "draft" | "review" | "published" | "archived";
 
+export type CaseRule = {
+  id: string;
+  condition: { stepId: string; op: "contains" | "equals" | "gte" | "lte"; value: string };
+  action:
+    | { type: "message"; message: string }
+    | { type: "goto_step"; stepId: string }
+    | { type: "done"; message: string };
+};
+
 export type DiagnosticCase = {
   id: string;
   slug: string;
@@ -12,6 +21,7 @@ export type DiagnosticCase = {
   summary: string;
   source?: CaseSource;
   status?: CaseStatus;
+  rules?: CaseRule[];
   steps: Array<{
     id: string;
     title: string;
@@ -32,6 +42,18 @@ export const SEED_CASES: DiagnosticCase[] = [
     title: "Samsung A52 A525F — Tidak Bisa Charging",
     summary: "Kasus pemeriksaan charging dengan VBUS dan jalur setelah OVP.",
     source: "community",
+    rules: [
+      {
+        id: "r1",
+        condition: { stepId: "s2", op: "contains", value: "0" },
+        action: { type: "message", message: "VBUS hilang setelah OVP — periksa OVP dan jalur sebelum-OVP." }
+      },
+      {
+        id: "r2",
+        condition: { stepId: "s2", op: "contains", value: "5" },
+        action: { type: "message", message: "Tegangan setelah OVP normal — lanjut verifikasi arus charging." }
+      }
+    ],
     steps: [
       { id:"s1", title:"Periksa VBUS", instruction:"Ukur tegangan VBUS pada test point yang sesuai schematic.", method:"voltage", testPoint:"VBUS" },
       { id:"s2", title:"Periksa setelah OVP", instruction:"Bandingkan tegangan sebelum dan sesudah OVP.", method:"voltage", testPoint:"AFTER_OVP" },

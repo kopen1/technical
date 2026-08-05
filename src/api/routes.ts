@@ -1,13 +1,21 @@
 import type { Hono } from "hono";
 import type { Env } from "../env";
 import type { CaseSource, CaseStatus, DiagnosticCase } from "../data/seed";
-import { answer, getSession, restoreSession, searchCases, start } from "../engine/engine";
+import { answer, getSession, relatedCases, restoreSession, searchCases, start } from "../engine/engine";
 import { loadSession, saveEvidence, saveSession } from "../db/db";
-import { createCase, deleteCase, getCaseBySlug, listCases, updateCase } from "../db/cases";
+import { createCase, deleteCase, getCaseById, getCaseBySlug, listCases, listRevisions, updateCase } from "../db/cases";
 import {
   createVisual, deleteVisual, getImage, listVisualsByCase,
   saveImage, updateVisual, type VisualReference, type VisualType
 } from "../db/visuals";
+import {
+  createSubmission, deleteSubmissionImage, listSubmissions,
+  setSubmissionStatus, type Submission
+} from "../db/submissions";
+import {
+  addPart, createCustomer, createRepair, deleteCustomer, deletePart, deleteRepair,
+  listCustomers, listRepairs, report, updateCustomer, updatePart, updateRepair
+} from "../db/workshop";
 import { requireAdmin } from "../auth/admin";
 
 const METHODS = ["observation", "voltage", "resistance", "diode", "continuity", "current", "thermal"];
@@ -70,14 +78,22 @@ export function routes(app: Hono<{Bindings: Env}>) {
     const model = c.req.query("model") ?? "";
     const symptom = c.req.query("symptom") ?? "";
     const cases = await listCases(c.env, { publishedOnly: true });
-    return c.json(searchCases(cases, model, symptom));
+    const res = searchCases(cases, model, symptom);
+    await c.env.DB.prepare(
+      "INSERT INTO analytics_searches (model,symptom,hits,country) VALUES (?,?,?,?)"
+    ).bind(model, symptom, res.total, c.req.header("CF-IPCountry") ?? "").run();
+    return c.json(res.results);
   });
 
   app.get("/api/cases/:slug", async c => {
     const item = await getCaseBySlug(c.env, c.req.param("slug"), true);
     if (!item) return c.json({error:"NOT_FOUND"},404);
-    const visuals = await listVisualsByCase(c.env, item.id);
-    return c.json({ ...item, visuals });
+    const [visuals, allCases] = await Promise.all([
+      listVisualsByCase(c.env, item.id),
+      listCases(c.env, { publishedOnly: true })
+    ]);
+    const related = relatedCases(allCases, item);
+    return c.json({ ...item, visuals, related });
   });
 
   app.get("/api/images/:id", async c => {
@@ -157,7 +173,37 @@ export function routes(app: Hono<{Bindings: Env}>) {
     const paths = await c.env.DB.prepare(
       "SELECT path,COUNT(*) AS total FROM analytics_visits GROUP BY path ORDER BY total DESC LIMIT 30"
     ).all();
-    return c.json({countries:countries.results,paths:paths.results});
+    const searches = await c.env.DB.prepare(
+      "SELECT model,symptom,hits,COUNT(*) AS total FROM analytics_searches GROUP BY model,symptom ORDER BY total DESC LIMIT 30"
+    ).all<{model:string;symptom:string;hits:number;total:number}>();
+    const topModels = searches.results.filter(x => x.model).reduce<Record<string,number>>((m,x)=>{m[x.model]=(m[x.model]||0)+x.total;return m}, {});
+    const topSymptoms = searches.results.filter(x => x.symptom).reduce<Record<string,number>>((m,x)=>{m[x.symptom]=(m[x.symptom]||0)+x.total;return m}, {});
+    const unresolved = await c.env.DB.prepare(
+      "SELECT COUNT(*) AS total FROM diagnostic_sessions WHERE status='ACTIVE' AND created_at < datetime('now','-1 hour')"
+    ).first<{total:number}>();
+    const useful = await c.env.DB.prepare(`
+      SELECT case_id,COUNT(*) AS total FROM diagnostic_sessions WHERE status='DONE'
+      GROUP BY case_id ORDER BY total DESC LIMIT 10
+    `).all<{case_id:string;total:number}>();
+    const failed = await c.env.DB.prepare(`
+      SELECT COUNT(*) AS total FROM diagnostic_sessions WHERE status='ACTIVE' AND created_at < datetime('now','-1 hour')
+    `).first<{total:number}>();
+    const testPoints = await c.env.DB.prepare(`
+      SELECT s.case_id, COUNT(*) AS total FROM diagnostic_sessions s
+      WHERE s.status='DONE' GROUP BY s.case_id ORDER BY total DESC LIMIT 10
+    `).all<{case_id:string;total:number}>();
+    const caseNames = await listCases(c.env);
+    const nameOf = (id:string) => caseNames.find(x => x.id === id)?.title ?? id;
+    return c.json({
+      countries: countries.results,
+      paths: paths.results,
+      topModels: Object.entries(topModels).sort((a,b)=>b[1]-a[1]).slice(0,10),
+      topSymptoms: Object.entries(topSymptoms).sort((a,b)=>b[1]-a[1]).slice(0,10),
+      unresolvedSessions: Number(unresolved?.total ?? 0),
+      usefulCases: useful.results.map(x => ({ title: nameOf(x.case_id), total: x.total })),
+      failedDiagnosis: Number(failed?.total ?? 0),
+      topTestPoints: testPoints.results.map(x => ({ title: nameOf(x.case_id), total: x.total }))
+    });
   });
 
   app.get("/api/admin/sessions", requireAdmin, async c => {
@@ -269,5 +315,158 @@ export function routes(app: Hono<{Bindings: Env}>) {
   app.delete("/api/admin/visuals/:id", requireAdmin, async c => {
     const ok = await deleteVisual(c.env, c.req.param("id")!);
     return ok ? c.json({ok:true}) : c.json({error:"NOT_FOUND"},404);
+  });
+
+  app.get("/api/admin/cases/:id/revisions", requireAdmin, async c => {
+    return c.json(await listRevisions(c.env, c.req.param("id")!));
+  });
+
+  app.post("/api/submissions/case", async c => {
+    const body = await c.req.json<any>();
+    const v = validateCase(body);
+    if (!v.ok) return c.json({error:v.error},400);
+    v.data.source = "community";
+    v.data.status = "review";
+    const sub = await createSubmission(c.env, "case", v.data);
+    return c.json({ok:true, submission: sub});
+  });
+
+  app.post("/api/submissions/visual", async c => {
+    const fd = await c.req.formData();
+    const file = fd.get("file");
+    if (!file || !(file instanceof File)) return c.json({error:"FILE_REQUIRED"},400);
+    const imageId = await saveImage(c.env, file.type, await file.arrayBuffer());
+    const payload = {
+      caseId: String(fd.get("caseId") ?? "") || null,
+      caption: String(fd.get("caption") ?? ""),
+      imageType: VISUAL_TYPES.includes(String(fd.get("imageType")) as VisualType)
+        ? String(fd.get("imageType")) : "board",
+      notes: String(fd.get("notes") ?? "")
+    };
+    const sub = await createSubmission(c.env, "visual", payload, imageId);
+    return c.json({ok:true, submission: sub});
+  });
+
+  app.post("/api/submissions/reference", async c => {
+    const body = await c.req.json<any>();
+    if (!body?.title && !body?.url) return c.json({error:"FIELD_REQUIRED"},400);
+    const sub = await createSubmission(c.env, "reference", {
+      title: String(body.title ?? ""),
+      url: String(body.url ?? ""),
+      notes: String(body.notes ?? "")
+    });
+    return c.json({ok:true, submission: sub});
+  });
+
+  app.get("/api/admin/submissions", requireAdmin, async c => {
+    const status = c.req.query("status") ?? undefined;
+    return c.json(await listSubmissions(c.env, status));
+  });
+
+  app.get("/api/admin/submissions/:id", requireAdmin, async c => {
+    const sub = await listSubmissions(c.env).then(l => l.find(s => s.id === c.req.param("id")));
+    return sub ? c.json(sub) : c.json({error:"NOT_FOUND"},404);
+  });
+
+  app.post("/api/admin/submissions/:id/approve", requireAdmin, async c => {
+    const subs = await listSubmissions(c.env);
+    const sub = subs.find(s => s.id === c.req.param("id"));
+    if (!sub) return c.json({error:"NOT_FOUND"},404);
+    if (sub.kind === "case" && sub.status !== "approved") {
+      await createCase(c.env, { ...sub.payload, status: "published", source: "community" });
+    }
+    if (sub.kind === "visual" && sub.status !== "approved") {
+      const payload = sub.payload || {};
+      const imageId = sub.imageId;
+      if (imageId && payload.caseId) {
+        await createVisual(c.env, {
+          caseId: payload.caseId,
+          imageType: payload.imageType || "board",
+          caption: payload.caption || "",
+          source: "community-submission",
+          verificationStatus: "community",
+          annotations: [],
+          sortOrder: 0
+        }, imageId);
+      }
+    }
+    const updated = await setSubmissionStatus(c.env, sub.id, "approved");
+    return c.json({ok:true, submission: updated});
+  });
+
+  app.post("/api/admin/submissions/:id/reject", requireAdmin, async c => {
+    const body = await c.req.json<any>();
+    const subs = await listSubmissions(c.env);
+    const sub = subs.find(s => s.id === c.req.param("id"));
+    if (!sub) return c.json({error:"NOT_FOUND"},404);
+    if (sub.imageId && sub.status !== "rejected") await deleteSubmissionImage(c.env, sub.imageId);
+    const updated = await setSubmissionStatus(c.env, sub.id, "rejected", String(body?.notes ?? ""));
+    return c.json({ok:true, submission: updated});
+  });
+
+  app.get("/api/admin/customers", requireAdmin, async c => {
+    return c.json(await listCustomers(c.env));
+  });
+
+  app.post("/api/admin/customers", requireAdmin, async c => {
+    const body = await c.req.json<any>();
+    if (!body?.name) return c.json({error:"FIELD_REQUIRED"},400);
+    const cust = await createCustomer(c.env, body);
+    return c.json({ok:true, customer: cust});
+  });
+
+  app.put("/api/admin/customers/:id", requireAdmin, async c => {
+    const body = await c.req.json<any>();
+    await updateCustomer(c.env, c.req.param("id")!, body);
+    return c.json({ok:true});
+  });
+
+  app.delete("/api/admin/customers/:id", requireAdmin, async c => {
+    await deleteCustomer(c.env, c.req.param("id")!);
+    return c.json({ok:true});
+  });
+
+  app.get("/api/admin/repairs", requireAdmin, async c => {
+    return c.json(await listRepairs(c.env));
+  });
+
+  app.post("/api/admin/repairs", requireAdmin, async c => {
+    const body = await c.req.json<any>();
+    if (!body?.customerId) return c.json({error:"FIELD_REQUIRED"},400);
+    const repair = await createRepair(c.env, body);
+    return c.json({ok:true, repair});
+  });
+
+  app.put("/api/admin/repairs/:id", requireAdmin, async c => {
+    const body = await c.req.json<any>();
+    await updateRepair(c.env, c.req.param("id")!, body);
+    return c.json({ok:true});
+  });
+
+  app.delete("/api/admin/repairs/:id", requireAdmin, async c => {
+    await deleteRepair(c.env, c.req.param("id")!);
+    return c.json({ok:true});
+  });
+
+  app.post("/api/admin/repairs/:id/parts", requireAdmin, async c => {
+    const body = await c.req.json<any>();
+    if (!body?.name) return c.json({error:"FIELD_REQUIRED"},400);
+    const part = await addPart(c.env, c.req.param("id")!, body);
+    return c.json({ok:true, part});
+  });
+
+  app.put("/api/admin/parts/:id", requireAdmin, async c => {
+    const body = await c.req.json<any>();
+    await updatePart(c.env, c.req.param("id")!, body);
+    return c.json({ok:true});
+  });
+
+  app.delete("/api/admin/parts/:id", requireAdmin, async c => {
+    await deletePart(c.env, c.req.param("id")!);
+    return c.json({ok:true});
+  });
+
+  app.get("/api/admin/workshop/report", requireAdmin, async c => {
+    return c.json(await report(c.env));
   });
 }

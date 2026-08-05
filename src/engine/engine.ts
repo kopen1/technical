@@ -15,13 +15,26 @@ export type DiagnosisSession = {
   status: "ACTIVE" | "DONE";
 };
 
+export type RuleCondition = {
+  stepId: string;
+  op: "contains" | "equals" | "gte" | "lte";
+  value: string;
+};
+
+export type RuleAction =
+  | { type: "message"; message: string }
+  | { type: "goto_step"; stepId: string }
+  | { type: "done"; message: string };
+
+export type Rule = { id: string; condition: RuleCondition; action: RuleAction };
+
 const sessions = new Map<string, DiagnosisSession>();
 
 function tokens(s: string) {
   return s.toLowerCase().split(/[\s\-,_./:]+/).filter(Boolean);
 }
 
-function scoreCase(c: DiagnosticCase, model: string, symptom: string) {
+export function scoreCase(c: DiagnosticCase, model: string, symptom: string) {
   const mt = tokens(model);
   const st = tokens(symptom);
   const cm = tokens(c.model);
@@ -49,11 +62,47 @@ function scoreCase(c: DiagnosticCase, model: string, symptom: string) {
 }
 
 export function searchCases(cases: DiagnosticCase[], model = "", symptom = "") {
-  return [...cases]
+  const scored = cases
     .map(c => ({ case: c, score: scoreCase(c, model, symptom) }))
     .filter(x => x.score > 0 || (!model && !symptom))
-    .sort((a, b) => b.score - a.score || a.case.model.localeCompare(b.case.model))
+    .sort((a, b) => b.score - a.score || a.case.model.localeCompare(b.case.model));
+  return {
+    results: scored.map(x => x.case),
+    total: scored.length,
+    best: scored[0]?.score ?? 0,
+    fallback: scored.length === 0
+  };
+}
+
+export function relatedCases(cases: DiagnosticCase[], base: DiagnosticCase, limit = 3) {
+  return cases
+    .filter(c => c.id !== base.id)
+    .map(c => {
+      let score = 0;
+      if (c.faultGroup === base.faultGroup) score += 6;
+      if (c.brand.toLowerCase() === base.brand.toLowerCase()) score += 3;
+      for (const t of tokens(base.model)) if (tokens(c.model).includes(t)) score += 2;
+      for (const t of tokens(base.symptom)) if (tokens(c.symptom).includes(t)) score += 2;
+      return { case: c, score };
+    })
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
     .map(x => x.case);
+}
+
+function checkRule(c: DiagnosticCase, rule: Rule, value: string): boolean {
+  const v = String(value ?? "").toLowerCase();
+  const rv = String(rule.condition.value ?? "").toLowerCase();
+  const num = parseFloat(v);
+  const rnum = parseFloat(rv);
+  switch (rule.condition.op) {
+    case "contains": return v.includes(rv);
+    case "equals": return v.trim() === rv;
+    case "gte": return !isNaN(num) && !isNaN(rnum) && num >= rnum;
+    case "lte": return !isNaN(num) && !isNaN(rnum) && num <= rnum;
+    default: return false;
+  }
 }
 
 export function start(cases: DiagnosticCase[], caseId: string) {
@@ -77,7 +126,7 @@ export function answer(cases: DiagnosticCase[], sessionId: string, value: string
   if (!c) return null;
 
   const step = c.steps[s.currentStep];
-  if (!step) return { session: s, case: c, step: null, done: true, total: c.steps.length };
+  if (!step) return { session: s, case: c, step: null, done: true, total: c.steps.length, notice: null };
 
   s.evidence.push({
     stepId: step.id,
@@ -86,7 +135,32 @@ export function answer(cases: DiagnosticCase[], sessionId: string, value: string
     createdAt: new Date().toISOString()
   });
 
-  s.currentStep++;
+  let notice: string | null = null;
+  let jumped = false;
+  for (const rule of c.rules ?? []) {
+    if (!rule?.condition || rule.condition.stepId !== step.id) continue;
+    if (!checkRule(c, rule, value)) continue;
+    const a = rule.action;
+    if (a.type === "message") notice = a.message;
+    else if (a.type === "done") {
+      s.status = "DONE";
+      s.currentStep = c.steps.length;
+      notice = a.message;
+      return {
+        session: s, case: c,
+        step: null, done: true, total: c.steps.length, notice
+      };
+    } else if (a.type === "goto_step") {
+      const idx = c.steps.findIndex(x => x.id === a.stepId);
+      if (idx >= 0 && idx !== s.currentStep) {
+        s.currentStep = idx;
+        jumped = true;
+      }
+      break;
+    }
+  }
+
+  if (!jumped) s.currentStep++;
   if (s.currentStep >= c.steps.length) s.status = "DONE";
 
   return {
@@ -94,7 +168,8 @@ export function answer(cases: DiagnosticCase[], sessionId: string, value: string
     case: c,
     step: c.steps[s.currentStep] ?? null,
     done: s.status === "DONE",
-    total: c.steps.length
+    total: c.steps.length,
+    notice
   };
 }
 

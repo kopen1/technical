@@ -1,32 +1,48 @@
 <!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TechniKit Admin V3</title><style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui;background:#f3f4f6;color:#111827}.shell{display:flex;min-height:100vh}.side{width:250px;background:#101828;color:white;padding:20px}.brand{font-weight:900;font-size:20px;margin-bottom:24px}.nav button{display:block;width:100%;border:0;background:transparent;color:#d0d5dd;text-align:left;padding:11px;border-radius:9px;margin:3px 0;cursor:pointer}.nav button:hover{background:#1d2939;color:white}.main{flex:1;padding:25px;max-width:1250px}.card{background:white;border:1px solid #e4e7ec;border-radius:15px;padding:20px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.num{font-size:30px;font-weight:900}.primary{padding:9px 12px;background:#101828;color:#fff;border:0;border-radius:8px;cursor:pointer}.danger{background:#b42318}.ghost{background:#fff;color:#101828;border:1px solid #d0d5dd}.hidden{display:none}input,select,textarea{padding:10px;border:1px solid #d0d5dd;border-radius:8px;margin:4px 0;font:inherit}textarea{width:100%;resize:vertical}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #eef0f3;font-size:14px}th{color:#667085;font-size:12px;text-transform:uppercase}.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}.b-verified{background:#d1fadf;color:#067647}.b-community{background:#eff8ff;color:#175cd3}.b-external{background:#fef0c7;color:#b54708}.b-unknown,.b-unverified{background:#f2f4f7;color:#475467}.b-draft{background:#f2f4f7;color:#475467}.b-review{background:#fef0c7;color:#b54708}.b-published{background:#d1fadf;color:#067647}.b-archived{background:#fee4e2;color:#b42318}.field{display:flex;flex-direction:column;margin:8px 0}.field label{font-size:12px;color:#475467;font-weight:700;margin-bottom:3px}.row{display:flex;gap:10px}.row>div{flex:1}.stepRow{border:1px dashed #d0d5dd;border-radius:10px;padding:10px;margin:8px 0}.toggle{margin-left:8px}.thumb{width:120px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e4e7ec}.imgbox{position:relative;display:inline-block;max-width:100%;cursor:crosshair;line-height:0}.imgbox img{max-width:100%;height:auto;border-radius:10px}.marker{position:absolute;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:#b42318;border:2px solid #fff;box-shadow:0 0 0 1px #101828;line-height:16px;font-size:10px;color:#fff;text-align:center;cursor:pointer}.marker .tip{display:none;position:absolute;left:50%;bottom:120%;transform:translateX(-50%);background:#101828;color:#fff;padding:4px 8px;border-radius:6px;white-space:nowrap;font-size:11px;line-height:1.2}.marker:hover .tip{display:block}.vcard{display:flex;gap:14px;align-items:flex-start;border:1px solid #e4e7ec;border-radius:12px;padding:12px;margin:10px 0}.vcard .meta{flex:1}@media(max-width:700px){.side{width:72px}.brand{font-size:0}.brand:after{content:"🔧";font-size:22px}.nav button{font-size:0}.nav button:before{content:"•";font-size:20px}.main{padding:12px}.grid{grid-template-columns:1fr 1fr}.row{flex-direction:column}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui;background:#f3f4f6;color:#111827}.shell{display:flex;min-height:100vh}.side{width:250px;background:#101828;color:white;padding:20px}.brand{font-weight:900;font-size:20px;margin-bottom:24px}.nav button{display:block;width:100%;border:0;background:transparent;color:#d0d5dd;text-align:left;padding:11px;border-radius:9px;margin:3px 0;cursor:pointer}.nav button:hover{background:#1d2939;color:white}.main{flex:1;padding:25px;max-width:1250px}.card{background:white;border:1px solid #e4e7ec;border-radius:15px;padding:20px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.num{font-size:30px;font-weight:900}.primary{padding:9px 12px;background:#101828;color:#fff;border:0;border-radius:8px;cursor:pointer}.danger{background:#b42318}.ghost{background:#fff;color:#101828;border:1px solid #d0d5dd}.hidden{display:none}input,select,textarea{padding:10px;border:1px solid #d0d5dd;border-radius:8px;margin:4px 0;font:inherit}textarea{width:100%;resize:vertical}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #eef0f3;font-size:14px}th{color:#667085;font-size:12px;text-transform:uppercase}.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}.b-verified{background:#d1fadf;color:#067647}.b-community{background:#eff8ff;color:#175cd3}.b-external{background:#fef0c7;color:#b54708}.b-unknown,.b-unverified,.b-draft,.b-received{background:#f2f4f7;color:#475467}.b-review,.b-diagnosing,.b-waiting_parts{background:#fef0c7;color:#b54708}.b-published,.b-done,.b-returned,.b-approved{background:#d1fadf;color:#067647}.b-archived,.b-rejected,.b-closed{background:#fee4e2;color:#b42318}.b-pending{background:#eff8ff;color:#175cd3}.field{display:flex;flex-direction:column;margin:8px 0}.field label{font-size:12px;color:#475467;font-weight:700;margin-bottom:3px}.row{display:flex;gap:10px}.row>div{flex:1}.stepRow{border:1px dashed #d0d5dd;border-radius:10px;padding:10px;margin:8px 0}.toggle{margin-left:8px}.thumb{width:120px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e4e7ec}.imgbox{position:relative;display:inline-block;max-width:100%;cursor:crosshair;line-height:0}.imgbox img{max-width:100%;height:auto;border-radius:10px}.marker{position:absolute;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:#b42318;border:2px solid #fff;box-shadow:0 0 0 1px #101828;line-height:16px;font-size:10px;color:#fff;text-align:center;cursor:pointer}.marker .tip{display:none;position:absolute;left:50%;bottom:120%;transform:translateX(-50%);background:#101828;color:#fff;padding:4px 8px;border-radius:6px;white-space:nowrap;font-size:11px;line-height:1.2}.marker:hover .tip{display:block}.vcard{display:flex;gap:14px;align-items:flex-start;border:1px solid #e4e7ec;border-radius:12px;padding:12px;margin:10px 0}.vcard .meta{flex:1}.viewer{overflow:hidden;border:1px solid #e4e7ec;border-radius:10px;background:#f8fafc;touch-action:none;position:relative}.viewer .layer{transform-origin:0 0;will-change:transform;position:relative;width:max-content}.viewer .layer img{display:block;max-width:none;user-select:none}.sub-card{border:1px solid #e4e7ec;border-radius:12px;padding:14px;margin:10px 0}.parts input{width:90px}.money{font-weight:800;font-size:16px}.filterb{border:1px solid #d0d5dd;border-radius:8px;padding:7px 12px;background:#fff;cursor:pointer;margin-right:6px}.filterb.on{background:#101828;color:#fff}@media(max-width:700px){.side{width:72px}.brand{font-size:0}.brand:after{content:"🔧";font-size:22px}.nav button{font-size:0}.nav button:before{content:"•";font-size:20px}.main{padding:12px}.grid{grid-template-columns:1fr 1fr}.row{flex-direction:column}}
 </style></head><body><div class="shell"><aside class="side"><div class="brand">TechniKit Admin</div><div id="nav" class="nav"></div></aside><main class="main">
 <div id="loginBox" class="card"><h2>Private Admin</h2><p>Admin API memakai credential server-side.</p><input id="username" placeholder="Username"><input id="password" type="password" placeholder="Password"><button class="primary" onclick="login()">Login</button><p id="loginError"></p></div>
 <div id="app" class="hidden"><div id="content"></div></div></main></div><script>
-let auth="",pages=[],cases=[],editing=null,visualCase="",vAnnotations=[];
+let auth="",pages=[],cases=[],editing=null,visualCase="",vAnnotations=[],subFilter="";
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const METHODS=["observation","voltage","resistance","diode","continuity","current","thermal"];
 const SOURCES=["verified","community","external","unknown"];
 const STATUSES=["draft","review","published","archived"];
 const V_TYPES=["board","connector","component","schematic","test_point","thermal","other"];
 const VERIFY=["verified","community","external","unverified"];
+const R_STATUS=["received","diagnosing","waiting_parts","repairing","done","returned","closed"];
 const METHOD_LABEL={observation:"Observasi",voltage:"Voltage",resistance:"Resistance",diode:"Diode",continuity:"Kontinuitas",current:"Arus",thermal:"Thermal"};
 const SRC_LABEL={verified:"Verified",community:"Community",external:"External",unknown:"Unknown"};
 const STATUS_LABEL={draft:"Draft",review:"Review",published:"Published",archived:"Archived"};
 const VT_LABEL={board:"Board",connector:"Connector",component:"Component",schematic:"Schematic",test_point:"Test Point",thermal:"Thermal",other:"Other"};
+const R_STATUS_LABEL={received:"Diterima",diagnosing:"Diagnosa",waiting_parts:"Tunggu Part",repairing:"Repair",done:"Selesai",returned:"Diambil",closed:"Closed"};
 async function login(){auth="Bearer "+btoa(username.value+":"+password.value);let r=await fetch("/api/admin/pages",{headers:{Authorization:auth}});if(!r.ok){loginError.textContent="Login gagal.";return}pages=await r.json();loginBox.classList.add("hidden");app.classList.remove("hidden");drawNav();show("dashboard")}
 function drawNav(){nav.innerHTML=pages.filter(p=>p.nav_visible&&p.enabled).map(p=>`<button onclick="show('${esc(p.page_key)}')">${esc(p.label)}</button>`).join("")}
 async function api(url,opts={}){opts.headers={...(opts.headers||{}),Authorization:auth};return (await fetch(url,opts)).json()}
 function srcBadge(s){return `<span class="badge b-${esc(s||"unknown")}">${esc(SRC_LABEL[s]||"Unknown")}</span>`}
 function stBadge(s){return `<span class="badge b-${esc(s||"draft")}">${esc(STATUS_LABEL[s]||"Draft")}</span>`}
+function money(n){return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(n||0)}
 async function show(k){
  if(k==="dashboard"){let d=await api("/api/admin/overview");content.innerHTML=`<h1>Dashboard</h1><div class="grid"><div class="card">Cases<div class="num">${d.cases}</div></div><div class="card">Sessions<div class="num">${d.sessions}</div></div><div class="card">Evidence<div class="num">${d.evidence}</div></div><div class="card">Visits<div class="num">${d.visits}</div></div></div>`}
- else if(k==="analytics"){let d=await api("/api/admin/analytics");content.innerHTML=`<h1>Analytics</h1><div class="card"><h3>Pengunjung berdasarkan negara</h3>${d.countries.map(x=>`<p>${esc(x.country)} — ${x.total}</p>`).join("")}<h3>Halaman</h3>${d.paths.map(x=>`<p>${esc(x.path)} — ${x.total}</p>`).join("")}</div>`}
+ else if(k==="analytics"){let d=await api("/api/admin/analytics");content.innerHTML=`<h1>Knowledge Analytics (V3.5)</h1>
+ <div class="grid"><div class="card">Sesi unresolved<div class="num">${d.unresolvedSessions}</div></div><div class="card">Diagnosis gagal<div class="num">${d.failedDiagnosis}</div></div></div>
+ <div class="card"><h3>Model paling dicari</h3>${(d.topModels||[]).map(x=>`<p>${esc(x[0])} — ${x[1]}</p>`).join("")||"<p class='muted'>Belum ada.</p>"}<h3>Gejala paling dicari</h3>${(d.topSymptoms||[]).map(x=>`<p>${esc(x[0])} — ${x[1]}</p>`).join("")||"<p class='muted'>Belum ada.</p>"}</div>
+ <div class="card"><h3>Kasus paling berguna (sesi selesai)</h3>${d.usefulCases.map(x=>`<p>${esc(x.title)} — ${x.total}</p>`).join("")||"<p class='muted'>Belum ada.</p>"}</div>
+ <div class="card"><h3>Negara</h3>${d.countries.map(x=>`<p>${esc(x.country)} — ${x.total}</p>`).join("")}<h3>Halaman</h3>${d.paths.map(x=>`<p>${esc(x.path)} — ${x.total}</p>`).join("")}</div>`}
  else if(k==="settings"){content.innerHTML=`<h1>Admin Navigation & Modules</h1><div class="card"><p><b>Nav Visible</b> = menu terlihat. <b>Enabled</b> = modul aktif. Menyembunyikan menu bukan security.</p>${pages.map(p=>`<div style="padding:10px 0;border-bottom:1px solid #eee"><b>${esc(p.label)}</b><button class="primary toggle" onclick="changePage('${esc(p.page_key)}',{navVisible:${p.nav_visible?0:1}})">${p.nav_visible?"Hide nav":"Show nav"}</button><button class="primary toggle" onclick="changePage('${esc(p.page_key)}',{enabled:${p.enabled?0:1}})">${p.enabled?"Disable":"Enable"}</button></div>`).join("")}</div>`}
  else if(k==="cases"){cases=await api("/api/admin/cases");renderCases()}
- else if(k==="engine"){content.innerHTML=`<h1>Diagnostic Engine</h1><div class="card">Rule-based engine aktif. Evidence disimpan ke D1. Hanya kasus status <b>published</b> yang dipakai engine publik.</div>`}
+ else if(k==="engine"){content.innerHTML=`<h1>Diagnostic Engine (V3.2)</h1><div class="card">Rule-based engine dengan <b>rule branching</b>, evidence conditions, fault scoring, related cases, dan fallback search. Hanya kasus <b>published</b> yang dipakai engine publik. Rules case bisa diatur di tab Cases (JSON).</div>`}
+ else if(k==="sessions"){loadSessions()}
+ else if(k==="submissions"){loadSubmissions()}
+ else if(k==="workshop"){loadWorkshop()}
  else if(k==="visual"){cases=await api("/api/admin/cases");renderVisuals()}
  else if(k==="seo"){content.innerHTML=`<h1>SEO</h1><div class="card"><p>Sitemap: <a href="/sitemap.xml" target="_blank">/sitemap.xml</a></p><p>Robots: <a href="/robots.txt" target="_blank">/robots.txt</a></p><p>Hanya kasus <b>published</b> yang masuk sitemap dan tampil publik.</p></div>`}
+}
+async function loadSessions(){
+ const rows=await api("/api/admin/sessions");
+ content.innerHTML=`<h1>Sessions <span class="muted" style="font-weight:400">(diagnostic history)</span></h1><div class="card"><table><thead><tr><th>Sesi</th><th>Case</th><th>Step</th><th>Status</th><th>Evidence</th><th>Waktu</th></tr></thead><tbody>${
+ rows.map(s=>`<tr><td><small>${esc(s.id)}</small></td><td>${esc(s.case_id)}</td><td>${s.current_step}</td><td>${s.status}</td><td>${s.evidence_count??"-"}</td><td>${esc(s.created_at)}</td></tr>`).join("")
+ }</tbody></table></div>`;
 }
 function renderCases(){
  content.innerHTML=`<h1>Cases <span style="font-weight:400;color:#667085">(${cases.length})</span></h1>
@@ -40,12 +56,17 @@ function renderCaseList(){
  const q=(caseFilter.value||"").toLowerCase();
  const list=cases.filter(c=>!q||(c.brand+" "+c.model+" "+c.symptom+" "+c.title).toLowerCase().includes(q));
  document.getElementById("caseList").innerHTML=`<div class="card"><table><thead><tr><th>Brand</th><th>Model</th><th>Gejala</th><th>Status</th><th>Source</th><th>Steps</th><th></th></tr></thead><tbody>${
-  list.map(c=>`<tr><td>${esc(c.brand)}</td><td><b>${esc(c.model)}</b><br><small>${esc(c.title)}</small></td><td>${esc(c.symptom)}</td><td>${stBadge(c.status)}</td><td>${srcBadge(c.source)}</td><td>${c.steps.length}</td><td><button class="primary toggle" onclick="editCase('${esc(c.id)}')">Edit</button><button class="danger toggle" onclick="delCase('${esc(c.id)}')">Hapus</button></td></tr>`).join("")
+  list.map(c=>`<tr><td>${esc(c.brand)}</td><td><b>${esc(c.model)}</b><br><small>${esc(c.title)}</small></td><td>${esc(c.symptom)}</td><td>${stBadge(c.status)}</td><td>${srcBadge(c.source)}</td><td>${c.steps.length}</td><td><button class="primary toggle" onclick="editCase('${esc(c.id)}')">Edit</button><button class="ghost toggle" onclick="viewRevisions('${esc(c.id)}')">Rev</button><button class="danger toggle" onclick="delCase('${esc(c.id)}')">Hapus</button></td></tr>`).join("")
  }</tbody></table></div>`;
+}
+async function viewRevisions(id){
+ const revs=await api("/api/admin/cases/"+encodeURIComponent(id)+"/revisions");
+ const box=document.getElementById("caseEditor");
+ box.innerHTML=`<div class="card"><h3>Riwayat revisi — ${esc(id)}</h3>${revs.length?revs.map(r=>`<div class="stepRow"><b>v${r.version}</b> ${esc(r.createdAt)}<pre style="max-height:200px;overflow:auto;font-size:11px">${esc(JSON.stringify(r.data,null,2))}</pre></div>`).join(""):"<p class='muted'>Belum ada revisi.</p>"}<button class="ghost" onclick="renderCases()">Tutup</button></div>`;
 }
 function editCase(id){
  editing=id?cases.find(c=>c.id===id):null;
- const c=editing||{brand:"",model:"",symptom:"",faultGroup:"",title:"",summary:"",source:"community",status:"draft",steps:[]};
+ const c=editing||{brand:"",model:"",symptom:"",faultGroup:"",title:"",summary:"",source:"community",status:"draft",rules:[],steps:[]};
  document.getElementById("caseEditor").innerHTML=`<div class="card"><h3>${editing?"Edit kasus":"Tambah kasus"}</h3>
  <div class="row"><div class="field"><label>Brand</label><input id="f-brand" value="${esc(c.brand)}"></div><div class="field"><label>Model</label><input id="f-model" value="${esc(c.model)}"></div></div>
  <div class="row"><div class="field"><label>Gejala (symptom)</label><input id="f-symptom" value="${esc(c.symptom)}"></div><div class="field"><label>Fault group</label><input id="f-fault" value="${esc(c.faultGroup)}"></div></div>
@@ -53,7 +74,10 @@ function editCase(id){
  <div class="field"><label>Ringkasan</label><textarea id="f-summary" rows="2">${esc(c.summary)}</textarea></div>
  <div class="row"><div class="field"><label>Status</label><select id="f-status">${STATUSES.map(s=>`<option value="${s}" ${c.status===s?"selected":""}>${STATUS_LABEL[s]}</option>`).join("")}</select></div><div class="field"><label>Source</label><select id="f-source">${SOURCES.map(s=>`<option value="${s}" ${c.source===s?"selected":""}>${SRC_LABEL[s]}</option>`).join("")}</select></div></div>
  <h3>Langkah pemeriksaan</h3><div id="stepRows">${c.steps.map((s,i)=>stepRow(s,i)).join("")}</div>
- <button class="ghost" onclick="addStep()">+ Tambah langkah</button><br><br>
+ <button class="ghost" onclick="addStep()">+ Tambah langkah</button>
+ <h3>Rules (JSON) — kondisi evidence → aksi</h3>
+ <p class="muted">Format: [{"condition":{"stepId":"s2","op":"contains|equals|gte|lte","value":"5"},"action":{"type":"message|goto_step|done","message":"...","stepId":"..."}}]</p>
+ <textarea id="f-rules" rows="4">${esc(JSON.stringify(c.rules||[]))}</textarea><br><br>
  <button class="primary" onclick="saveCase()">Simpan</button> <button class="ghost" onclick="renderCases()">Batal</button></div>`;
 }
 function stepRow(s,i){
@@ -74,6 +98,8 @@ function saveCase(){
   method:r.querySelector('[data-step="method"]').value,
   testPoint:r.querySelector('[data-step="testPoint"]').value.trim()||undefined
  }));
+ let rules=[];
+ try{rules=JSON.parse(fRules.value||"[]")}catch(e){alert("Rules tidak valid JSON");return}
  const body={id:editing?.id,slug:(editing?editing.slug:document.getElementById("f-title").value).toLowerCase().replace(/\s+/g,"-"),
   brand:document.getElementById("f-brand").value.trim(),
   model:document.getElementById("f-model").value.trim(),
@@ -82,8 +108,8 @@ function saveCase(){
   title:document.getElementById("f-title").value.trim(),
   summary:document.getElementById("f-summary").value.trim(),
   status:document.getElementById("f-status").value,
-  source:document.getElementById("f-source").value,steps};
- if(!body.brand||!body.model||!body.symptom||!body.title||!steps.length){alert("Lengkapi field wajib (brand, model, gejala, judul, minimal 1 langkah).");return}
+  source:document.getElementById("f-source").value,steps,rules};
+ if(!body.brand||!body.model||!body.symptom||!body.title||!steps.length){alert("Lengkapi field wajib.");return}
  (async()=>{
   let r;
   if(editing){r=await api("/api/admin/cases/"+encodeURIComponent(editing.id),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})}
@@ -93,6 +119,58 @@ function saveCase(){
 }
 async function delCase(id){if(!confirm("Hapus kasus ini?"))return;const r=await api("/api/admin/cases/"+encodeURIComponent(id),{method:"DELETE"});if(r.ok){cases=cases.filter(c=>c.id!==id);renderCases()}else{alert("Gagal hapus")}}
 async function changePage(key,body){await api("/api/admin/pages/"+key,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});pages=await api("/api/admin/pages");drawNav();show("settings")}
+
+async function loadSubmissions(){
+ const list=await api("/api/admin/submissions");
+ content.innerHTML=`<h1>Submissions (V3.3) <span class="muted" style="font-weight:400">community → moderation</span></h1>
+ <div class="card"><button class="filterb ${subFilter===""?"on":""}" onclick="subFilter='';loadSubmissions()">Semua</button><button class="filterb ${subFilter==="pending"?"on":""}" onclick="subFilter='pending';loadSubmissions()">Pending</button><button class="filterb ${subFilter==="approved"?"on":""}" onclick="subFilter='approved';loadSubmissions()">Approved</button><button class="filterb ${subFilter==="rejected"?"on":""}" onclick="subFilter='rejected';loadSubmissions()">Rejected</button></div>
+ <div id="subList">${renderSubs(list)}</div>`;
+}
+function renderSubs(list){
+ if(!list.length)return "<p class='muted'>Tidak ada submission.</p>";
+ return list.map(s=>`<div class="sub-card"><span class="badge b-${esc(s.status)}">${esc(s.status)}</span> <span class="badge b-community">${esc(s.kind)}</span> <small>${esc(s.createdAt)}</small>
+ <p><b>${esc(subTitle(s))}</b></p><pre style="font-size:11px;max-height:140px;overflow:auto;background:#f8fafc;padding:8px;border-radius:8px">${esc(JSON.stringify(s.payload,null,2))}</pre>
+ ${s.imageId?`<img class="thumb" src="/api/images/${esc(s.imageId)}">`:""}
+ ${s.status==="pending"?`<button class="primary toggle" onclick="approveSub('${esc(s.id)}')">Approve</button><button class="danger toggle" onclick="rejectSub('${esc(s.id)}')">Reject</button>`:""}
+ ${s.reviewerNotes?`<p class="muted">Catatan: ${esc(s.reviewerNotes)}</p>`:""}</div>`).join("");
+}
+function subTitle(s){const p=s.payload||{};if(s.kind==="case")return p.title||p.model||"";if(s.kind==="visual")return p.caption||"Visual";return p.title||"Reference"}
+async function approveSub(id){const r=await api("/api/admin/submissions/"+encodeURIComponent(id)+"/approve",{method:"POST"});alert(r.ok?"Approved. Case/visual dibuat.":"Gagal");loadSubmissions()}
+async function rejectSub(id){const notes=prompt("Alasan penolakan:");const r=await api("/api/admin/submissions/"+encodeURIComponent(id)+"/reject",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({notes:notes||""})});alert(r.ok?"Ditolak.":"Gagal");loadSubmissions()}
+
+async function loadWorkshop(){
+ const [custs,reps,rep]=await Promise.all([api("/api/admin/customers"),api("/api/admin/repairs"),api("/api/admin/workshop/report")]);
+ content.innerHTML=`<h1>Workshop (V4)</h1>
+ <div class="grid"><div class="card">Repair<div class="num">${rep.totalRepairs}</div></div><div class="card">Income<div class="money">${money(rep.income)}</div></div><div class="card">Expense<div class="money">${money(rep.expense)}</div></div><div class="card">Profit<div class="money">${money(rep.profit)}</div></div></div>
+ <div class="card"><h3>Laporan</h3><p>${Object.entries(rep.byStatus||{}).map(([k,v])=>`${esc(R_STATUS_LABEL[k]||k)}: ${v}`).join(" · ")}</p><p>Top device: ${(rep.topDevices||[]).map(x=>`${esc(x[0])} (${x[1]})`).join(", ")||"-"}</p></div>
+ <div class="row"><div class="card"><h3>Pelanggan</h3><div class="row"><div class="field"><label>Nama</label><input id="wCustName"></div><div class="field"><label>HP</label><input id="wCustPhone"></div></div><button class="primary" onclick="addCustomer()">+ Pelanggan</button><div id="wCustList">${custs.map(c=>`<div style="padding:8px 0;border-bottom:1px solid #eee"><b>${esc(c.name)}</b> ${esc(c.phone)} <button class="ghost toggle" onclick="delCustomer('${esc(c.id)}')">Hapus</button></div>`).join("")||"<p class='muted'>Belum ada.</p>"}</div></div>
+ <div class="card"><h3>Repair baru</h3>
+ <div class="field"><label>Pelanggan</label><select id="wRepCust">${custs.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("")||"<option value=''>-</option>"}</select></div>
+ <div class="row"><div class="field"><label>Device</label><input id="wRepDevice" placeholder="Samsung A52"></div><div class="field"><label>Gejala</label><input id="wRepSymptom"></div></div>
+ <button class="primary" onclick="addRepair()">+ Repair</button></div></div>
+ <h3>Daftar repair</h3><div id="wRepList"></div>`;
+ renderRepairs(reps);
+}
+function renderRepairs(reps){
+ document.getElementById("wRepList").innerHTML=reps.map(r=>`<div class="sub-card"><span class="badge b-${esc(r.status)}">${esc(R_STATUS_LABEL[r.status]||r.status)}</span> <b>${esc(r.deviceBrand)} ${esc(r.deviceModel)}</b> — ${esc(r.symptom)}<br>
+ <small>Income ${money(r.income)} | Expense ${money(r.expense)} | Profit ${money(r.profit)}</small>
+ <div class="row"><div class="field"><label>Status</label><select onchange="setRepairStatus('${esc(r.id)}',this.value)">${R_STATUS.map(s=>`<option value="${s}" ${r.status===s?"selected":""}>${R_STATUS_LABEL[s]}</option>`).join("")}</select></div>
+ <div class="field"><label>Diagnosa</label><input id="diag-${esc(r.id)}" value="${esc(r.diagnosis)}" onchange="saveRepairText('${esc(r.id)}')"></div></div>
+ <div class="field"><label>Tindakan</label><input id="act-${esc(r.id)}" value="${esc(r.action)}" onchange="saveRepairText('${esc(r.id)}')"></div>
+ <div class="row"><div class="field"><label>Fee service</label><input type="number" id="fee-${esc(r.id)}" value="${r.serviceFee}" onchange="saveRepairText('${esc(r.id)}')"></div><div class="field"><label>Diskon</label><input type="number" id="disc-${esc(r.id)}" value="${r.discount}" onchange="saveRepairText('${esc(r.id)}')"></div></div>
+ <h4>Parts</h4>${r.parts.map(p=>`<div style="display:flex;gap:6px;align-items:center;margin:4px 0"><input style="flex:2" value="${esc(p.name)}" data-pn="${esc(p.id)}"><input data-pc="${esc(p.id)}" value="${p.cost}"><input data-pp="${esc(p.id)}" value="${p.price}"><input data-pq="${esc(p.id)}" value="${p.qty}" style="width:50px"><button class="danger toggle" onclick="delPart('${esc(p.id)}')">X</button></div>`).join("")||"<p class='muted'>Belum ada part.</p>"}
+ <div class="row"><div class="field"><label>Part</label><input id="pn-${esc(r.id)}"></div><div class="field"><label>Cost</label><input id="pc-${esc(r.id)}" type="number"></div><div class="field"><label>Price</label><input id="pp-${esc(r.id)}" type="number"></div><div class="field"><label>Qty</label><input id="pq-${esc(r.id)}" type="number" value="1"></div></div>
+ <button class="ghost" onclick="addPart('${esc(r.id)}')">+ Part</button>
+ <button class="danger toggle" onclick="delRepair('${esc(r.id)}')">Hapus repair</button></div>`).join("");
+}
+async function addCustomer(){const r=await api("/api/admin/customers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:wCustName.value,phone:wCustPhone.value})});alert(r.ok?"OK":"Nama wajib");loadWorkshop()}
+async function delCustomer(id){if(!confirm("Hapus pelanggan + repairnya?"))return;await api("/api/admin/customers/"+encodeURIComponent(id),{method:"DELETE"});loadWorkshop()}
+async function addRepair(){const r=await api("/api/admin/repairs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerId:wRepCust.value,deviceBrand:(wRepDevice.value.split(" ")[0]||""),deviceModel:(wRepDevice.value.split(" ").slice(1).join(" ")),symptom:wRepSymptom.value})});if(r.ok)loadWorkshop();else alert("Pilih pelanggan dulu")}
+async function setRepairStatus(id,v){await api("/api/admin/repairs/"+encodeURIComponent(id),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:v})});loadWorkshop()}
+async function saveRepairText(id){await api("/api/admin/repairs/"+encodeURIComponent(id),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({diagnosis:document.getElementById("diag-"+id).value,action:document.getElementById("act-"+id).value,serviceFee:Number(document.getElementById("fee-"+id).value)||0,discount:Number(document.getElementById("disc-"+id).value)||0})});loadWorkshop()}
+async function addPart(id){await api("/api/admin/repairs/"+encodeURIComponent(id)+"/parts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:document.getElementById("pn-"+id).value,cost:Number(document.getElementById("pc-"+id).value)||0,price:Number(document.getElementById("pp-"+id).value)||0,qty:Number(document.getElementById("pq-"+id).value)||1})});loadWorkshop()}
+async function delPart(id){await api("/api/admin/parts/"+encodeURIComponent(id),{method:"DELETE"});loadWorkshop()}
+async function delRepair(id){if(!confirm("Hapus repair?"))return;await api("/api/admin/repairs/"+encodeURIComponent(id),{method:"DELETE"});loadWorkshop()}
 
 function renderVisuals(){
  visualCase=visualCase||cases[0]?.id||"";
@@ -109,7 +187,7 @@ function renderVisuals(){
 }
 async function loadVisuals(){
  const list=await api("/api/admin/visuals?caseId="+encodeURIComponent(visualCase));
- document.getElementById("vList").innerHTML=`<h3>Reference kasus ini (${list.length})</h3>${list.length?list.map(v=>`<div class="vcard"><img class="thumb" src="${esc(v.url||"")}"><div class="meta"><b>${esc(v.caption||"(tanpa caption)")}</b> <span class="badge b-${esc(v.verificationStatus)}">${esc(v.verificationStatus)}</span> <span class="badge b-community">${esc(VT_LABEL[v.imageType]||v.imageType)}</span><p class="badge b-unknown">${v.annotations.length} annotation</p><p style="margin:4px 0;color:#667085">${esc(v.source||"")}</p><button class="primary toggle" onclick="openAnnotation('${esc(v.id)}')">Annotate</button> <button class="danger toggle" onclick="delVisual('${esc(v.id)}')">Hapus</button></div></div>`).join(""):"<p class='badge b-unknown'>Belum ada visual untuk kasus ini.</p>"}`;
+ document.getElementById("vList").innerHTML=`<h3>Reference kasus ini (${list.length})</h3>${list.length?list.map(v=>`<div class="vcard"><img class="thumb" src="${esc(v.url||"")}"><div class="meta"><b>${esc(v.caption||"(tanpa caption)")}</b> <span class="badge b-${esc(v.verificationStatus)}">${esc(v.verificationStatus)}</span> <span class="badge b-community">${esc(VT_LABEL[v.imageType]||v.imageType)}</span> <span class="badge b-unknown">${v.annotations.length} annotation</span><p style="margin:4px 0;color:#667085">${esc(v.source||"")}</p><button class="primary toggle" onclick="openAnnotation('${esc(v.id)}')">Board Viewer + Annotate</button> <button class="danger toggle" onclick="delVisual('${esc(v.id)}')">Hapus</button></div></div>`).join(""):"<p class='badge b-unknown'>Belum ada visual untuk kasus ini.</p>"}`;
 }
 async function uploadVisual(){
  const file=vFile.files[0];if(!file){alert("Pilih file gambar.");return}
@@ -128,25 +206,41 @@ async function openAnnotation(id){
  const list=await api("/api/admin/visuals?caseId="+encodeURIComponent(visualCase));
  const v=list.find(x=>x.id===id);if(!v)return;
  vAnnotations=v.annotations.map(a=>({...a}));
- document.getElementById("vEditor").innerHTML=`<div class="card"><h3>Annotation — ${esc(v.caption||v.id)}</h3>
- <p class="muted">Klik pada gambar untuk menambah marker. Tipe: kiri = test point, kanan = komponen.</p>
- <div class="imgbox" id="vCanvas" onclick="addMarker(event)"><img src="${esc(v.url||"")}" id="vImg"><div id="vMarkers"></div></div>
+ document.getElementById("vEditor").innerHTML=`<div class="card"><h3>Board Viewer — ${esc(v.caption||v.id)}</h3>
+ <p class="muted">Scroll = zoom · Drag = pan · Klik = tambah marker (label otomatis diminta).</p>
+ <div class="viewer" id="vViewer"><div class="layer" id="vLayer"><img id="vImg" src="${esc(v.url||"")}"><div id="vMarkers"></div></div></div>
  <div id="vAnnoList"></div>
  <button class="primary" onclick="saveAnnotations('${esc(v.id)}')">Simpan annotation</button> <button class="ghost" onclick="document.getElementById('vEditor').innerHTML=''">Tutup</button></div>`;
- renderMarkers();
+ setTimeout(()=>attachViewer("vViewer","vLayer",true),50);
+}
+function attachViewer(viewerId,layerId,edit){
+ const box=document.getElementById(viewerId),layer=document.getElementById(layerId);
+ if(!box||!layer)return;
+ let scale=1,tx=0,ty=0,dragging=false,sx=0,sy=0;
+ function apply(){layer.style.transform=`scale(${scale}) translate(${tx}px,${ty}px)`}
+ box.addEventListener("wheel",e=>{e.preventDefault();const f=e.deltaY<0?1.18:0.85;scale=Math.min(10,Math.max(1,scale*f));apply()},{passive:false});
+ box.addEventListener("mousedown",e=>{if(e.button!==0&&edit)return;dragging=true;sx=e.clientX-tx;sy=e.clientY-ty;box.style.cursor="grabbing"});
+ window.addEventListener("mousemove",e=>{if(!dragging)return;tx=e.clientX-sx;ty=e.clientY-sy;apply()});
+ window.addEventListener("mouseup",()=>{dragging=false;box.style.cursor="grab"});
+ box.style.cursor="grab";
+ if(edit){
+  box.addEventListener("click",e=>{
+   if(dragging)return;
+   const r=box.getBoundingClientRect();
+   const lw=layer.offsetWidth, lh=layer.offsetHeight;
+   const x=Math.min(1,Math.max(0,(e.clientX-r.left-tx)/(lw*scale)));
+   const y=Math.min(1,Math.max(0,(e.clientY-r.top-ty)/(lh*scale)));
+   const label=prompt("Label marker:")||"Point";
+   const type=e.button===2?"component":"test_point";
+   vAnnotations.push({id:crypto.randomUUID(),label,type,x,y});
+   renderMarkers();
+  });
+ }
 }
 function renderMarkers(){
  const box=document.getElementById("vMarkers");if(!box)return;
  box.innerHTML=vAnnotations.map((a,i)=>`<div class="marker" style="left:${a.x*100}%;top:${a.y*100}%" onclick="promptLabel(${i})"><span class="tip">${esc(a.label)}</span>${esc((a.label||"·").charAt(0))}</div>`).join("");
  document.getElementById("vAnnoList").innerHTML=vAnnotations.length?vAnnotations.map((a,i)=>`<div class="stepRow"><b>${esc(a.label)}</b> (${(a.x*100).toFixed(1)}%, ${(a.y*100).toFixed(1)}%) <button class="danger toggle" onclick="vAnnotations.splice(${i},1);renderMarkers()">Hapus</button></div>`).join(""):"<p class='muted'>Belum ada annotation.</p>";
-}
-function addMarker(ev){
- const box=document.getElementById("vCanvas");const r=box.getBoundingClientRect();
- const x=(ev.clientX-r.left)/r.width,y=(ev.clientY-r.top)/r.height;
- const label=prompt("Label marker:")||"Point";
- const type=ev.button===2?"component":"test_point";
- vAnnotations.push({id:crypto.randomUUID(),label,type,x:Math.min(1,Math.max(0,x)),y:Math.min(1,Math.max(0,y))});
- renderMarkers();
 }
 function promptLabel(i){const a=vAnnotations[i];const l=prompt("Label:",a.label);if(l!==null){a.label=l;renderMarkers()}}
 async function saveAnnotations(id){
