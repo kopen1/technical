@@ -1,17 +1,24 @@
 import type { Hono } from "hono";
 import type { Env } from "../env";
-import type { CaseSource, DiagnosticCase } from "../data/seed";
+import type { CaseSource, CaseStatus, DiagnosticCase } from "../data/seed";
 import { answer, getSession, restoreSession, searchCases, start } from "../engine/engine";
 import { loadSession, saveEvidence, saveSession } from "../db/db";
 import { createCase, deleteCase, getCaseBySlug, listCases, updateCase } from "../db/cases";
+import {
+  createVisual, deleteVisual, getImage, listVisualsByCase,
+  saveImage, updateVisual, type VisualReference, type VisualType
+} from "../db/visuals";
 import { requireAdmin } from "../auth/admin";
 
 const METHODS = ["observation", "voltage", "resistance", "diode", "continuity", "current", "thermal"];
 const SOURCES: CaseSource[] = ["verified", "community", "external", "unknown"];
+const STATUSES: CaseStatus[] = ["draft", "review", "published", "archived"];
+const VISUAL_TYPES: VisualType[] = ["board", "connector", "component", "schematic", "test_point", "thermal", "other"];
+const VERIFY: string[] = ["verified", "community", "external", "unverified"];
 
 function validateCase(b: any): { ok: true; data: DiagnosticCase } | { ok: false; error: string } {
   if (!b || typeof b !== "object") return { ok: false, error: "BODY_INVALID" };
-  const { slug, brand, model, symptom, faultGroup, title, summary, source, steps } = b;
+  const { slug, brand, model, symptom, faultGroup, title, summary, source, steps, status } = b;
   if (![brand, model, symptom, faultGroup, title, summary].every(x => typeof x === "string" && x.trim()))
     return { ok: false, error: "FIELD_REQUIRED" };
   if (!Array.isArray(steps) || steps.length === 0)
@@ -40,6 +47,7 @@ function validateCase(b: any): { ok: true; data: DiagnosticCase } | { ok: false;
       title: String(title).trim(),
       summary: String(summary).trim(),
       source: SOURCES.includes(source) ? source : "community",
+      status: STATUSES.includes(status) ? status : "published",
       steps: cleanSteps
     }
   };
@@ -54,25 +62,39 @@ export function routes(app: Hono<{Bindings: Env}>) {
   }));
 
   app.get("/api/cases", async c => {
-    const cases = await listCases(c.env);
+    const cases = await listCases(c.env, { publishedOnly: true });
     return c.json(cases);
   });
 
   app.get("/api/search", async c => {
     const model = c.req.query("model") ?? "";
     const symptom = c.req.query("symptom") ?? "";
-    const cases = await listCases(c.env);
+    const cases = await listCases(c.env, { publishedOnly: true });
     return c.json(searchCases(cases, model, symptom));
   });
 
   app.get("/api/cases/:slug", async c => {
-    const item = await getCaseBySlug(c.env, c.req.param("slug"));
-    return item ? c.json(item) : c.json({error:"NOT_FOUND"},404);
+    const item = await getCaseBySlug(c.env, c.req.param("slug"), true);
+    if (!item) return c.json({error:"NOT_FOUND"},404);
+    const visuals = await listVisualsByCase(c.env, item.id);
+    return c.json({ ...item, visuals });
+  });
+
+  app.get("/api/images/*", async c => {
+    const id = c.req.param("*");
+    const img = await getImage(c.env, id!);
+    if (!img) return c.json({error:"NOT_FOUND"},404);
+    return new Response(img.data, {
+      headers: {
+        "Content-Type": img.mime,
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    });
   });
 
   app.post("/api/diagnosis/start", async c => {
     const body = await c.req.json<{caseId:string}>();
-    const cases = await listCases(c.env);
+    const cases = await listCases(c.env, { publishedOnly: true });
     const result = start(cases, body.caseId);
     if (!result) return c.json({error:"CASE_NOT_FOUND"},404);
     await saveSession(c.env, result.session);
@@ -89,7 +111,7 @@ export function routes(app: Hono<{Bindings: Env}>) {
     }
     restoreSession(before);
     const beforeCount = before.evidence.length;
-    const cases = await listCases(c.env);
+    const cases = await listCases(c.env, { publishedOnly: true });
     const result = answer(cases, body.sessionId, String(body.value ?? ""));
     if (!result) return c.json({error:"SESSION_NOT_FOUND"},404);
 
@@ -196,6 +218,57 @@ export function routes(app: Hono<{Bindings: Env}>) {
 
   app.delete("/api/admin/cases/:id", requireAdmin, async c => {
     const ok = await deleteCase(c.env, c.req.param("id")!);
+    return ok ? c.json({ok:true}) : c.json({error:"NOT_FOUND"},404);
+  });
+
+  app.get("/api/admin/visuals", requireAdmin, async c => {
+    const caseId = c.req.query("caseId");
+    const visuals: VisualReference[] = caseId
+      ? await listVisualsByCase(c.env, caseId)
+      : await (await Promise.all(
+          (await listCases(c.env)).map(x => listVisualsByCase(c.env, x.id))
+        )).flat();
+    return c.json(visuals);
+  });
+
+  app.post("/api/admin/visuals/upload", requireAdmin, async c => {
+    const fd = await c.req.formData();
+    const caseId = String(fd.get("caseId") ?? "");
+    const file = fd.get("file");
+    if (!caseId || !file || !(file instanceof File)) return c.json({error:"FILE_REQUIRED"},400);
+    const imageId = await saveImage(c.env, file.type, await file.arrayBuffer());
+    const annotationsRaw = String(fd.get("annotations") ?? "[]");
+    let annotations = [];
+    try { annotations = JSON.parse(annotationsRaw); } catch { annotations = []; }
+    const v = await createVisual(c.env, {
+      caseId,
+      imageType: VISUAL_TYPES.includes(String(fd.get("imageType")) as VisualType)
+        ? String(fd.get("imageType")) as VisualType : "other",
+      caption: String(fd.get("caption") ?? ""),
+      source: String(fd.get("source") ?? ""),
+      verificationStatus: VERIFY.includes(String(fd.get("verificationStatus")))
+        ? String(fd.get("verificationStatus")) as VisualReference["verificationStatus"] : "unverified",
+      annotations,
+      sortOrder: Number(fd.get("sortOrder") ?? 0) || 0
+    }, imageId);
+    return c.json({ok:true, visual: v});
+  });
+
+  app.put("/api/admin/visuals/:id", requireAdmin, async c => {
+    const body = await c.req.json<any>();
+    const v = await updateVisual(c.env, c.req.param("id")!, {
+      imageType: VISUAL_TYPES.includes(body?.imageType) ? body.imageType : undefined,
+      caption: body?.caption === undefined ? undefined : String(body.caption),
+      source: body?.source === undefined ? undefined : String(body.source),
+      verificationStatus: VERIFY.includes(body?.verificationStatus) ? body.verificationStatus : undefined,
+      annotations: Array.isArray(body?.annotations) ? body.annotations : undefined,
+      sortOrder: body?.sortOrder === undefined ? undefined : Number(body.sortOrder) || 0
+    });
+    return v ? c.json({ok:true, visual: v}) : c.json({error:"NOT_FOUND"},404);
+  });
+
+  app.delete("/api/admin/visuals/:id", requireAdmin, async c => {
+    const ok = await deleteVisual(c.env, c.req.param("id")!);
     return ok ? c.json({ok:true}) : c.json({error:"NOT_FOUND"},404);
   });
 }

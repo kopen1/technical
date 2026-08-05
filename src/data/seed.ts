@@ -1,4 +1,5 @@
 export type CaseSource = "verified" | "community" | "external" | "unknown";
+export type CaseStatus = "draft" | "review" | "published" | "archived";
 
 export type DiagnosticCase = {
   id: string;
@@ -10,6 +11,7 @@ export type DiagnosticCase = {
   title: string;
   summary: string;
   source?: CaseSource;
+  status?: CaseStatus;
   steps: Array<{
     id: string;
     title: string;

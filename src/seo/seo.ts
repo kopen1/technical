@@ -14,7 +14,7 @@ Sitemap: ${origin}/sitemap.xml`);
 
   app.get("/sitemap.xml", async c => {
     const origin = new URL(c.req.url).origin;
-    const cases = await listCases(c.env);
+    const cases = await listCases(c.env, { publishedOnly: true });
     const urls = ["/", ...cases.map(x => `/diagnosis/${x.slug}`)];
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
