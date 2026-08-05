@@ -18,10 +18,11 @@ TechniKit adalah toolkit diagnostik yang membantu teknisi memeriksa kerusakan se
 ### Publik
 | Fitur | Keterangan |
 |---|---|
-| Landing page | Cari kasus, mulai diagnosis, lihat daftar kasus awal |
+| Landing page | Cari kasus (filter brand), mulai diagnosis, lihat daftar kasus + badge source |
 | Diagnostic Engine | Pilih kasus → ikuti langkah pemeriksaan → input hasil → lanjut ke langkah berikutnya |
-| Public case pages | Halaman dokumentasi per kasus (`/diagnosis/<slug>`) dengan langkah + test point |
-| SEO | `sitemap.xml` dan `robots.txt` untuk indexing Google |
+| Public case pages | Halaman dokumentasi per kasus (`/diagnosis/<slug>`) dengan langkah + test point + visual reference + annotation |
+| Visual Reference | Board/schematic/thermal/component image dengan marker annotation (koordinat relatif) |
+| SEO | `sitemap.xml` dan `robots.txt` (hanya kasus `published`) untuk indexing Google |
 | Pencarian | `/api/search?model=&symptom=` mencari kasus berdasarkan skor |
 
 ### Alur diagnosis
@@ -34,6 +35,8 @@ TechniKit adalah toolkit diagnostik yang membantu teknisi memeriksa kerusakan se
 | Fitur | Keterangan |
 |---|---|
 | Dashboard | Ringkasan jumlah cases, sessions, evidence, dan visits |
+| Cases CRUD | Buat/edit/hapus kasus + langkah + **status workflow** (draft/review/published/archived) |
+| Visual Reference | Upload gambar (tersimpan di D1), tipe visual, verification, annotation editor (klik gambar) |
 | Analytics | Pengunjung berdasarkan negara (via header `CF-IPCountry`) dan halaman |
 | Sessions | Riwayat sesi diagnosis terbaru dari D1 |
 | Modul & navigasi | Atur visibilitas dan status enable tiap menu admin |
@@ -42,19 +45,28 @@ Autentikasi admin memakai `Authorization: Bearer base64(username:secret)` dari s
 
 ### API endpoints
 ```
-GET  /api/health               -> status worker
-GET  /api/cases                -> daftar kasus (seed)
-GET  /api/search?model=&...    -> pencarian kasus
-GET  /api/cases/:slug          -> detail kasus
-POST /api/diagnosis/start      -> mulai sesi (body: { caseId })
-POST /api/diagnosis/answer     -> jawab langkah (body: { sessionId, value })
-POST /api/analytics/visit      -> catat kunjungan (body: { path, referrer })
+GET  /api/health                 -> status worker
+GET  /api/cases                  -> daftar kasus PUBLISHED
+GET  /api/search?model=&...      -> pencarian kasus (published)
+GET  /api/cases/:slug            -> detail kasus + visuals (published)
+GET  /api/images/:id             -> serve gambar visual
+POST /api/diagnosis/start        -> mulai sesi (body: { caseId })
+POST /api/diagnosis/answer       -> jawab langkah (body: { sessionId, value })
+POST /api/analytics/visit        -> catat kunjungan (body: { path, referrer })
 
-GET  /api/admin/overview       -> ringkasan (admin)
-GET  /api/admin/analytics      -> analytics negara/halaman (admin)
-GET  /api/admin/sessions       -> riwayat sesi (admin)
-GET  /api/admin/pages          -> daftar modul admin (admin)
-PUT  /api/admin/pages/:key     -> ubah label/visibilitas/enabled (admin)
+GET  /api/admin/overview         -> ringkasan (admin)
+GET  /api/admin/analytics        -> analytics negara/halaman (admin)
+GET  /api/admin/sessions         -> riwayat sesi (admin)
+GET  /api/admin/pages            -> daftar modul admin (admin)
+PUT  /api/admin/pages/:key       -> ubah label/visibilitas/enabled (admin)
+GET  /api/admin/cases            -> semua kasus (admin)
+POST /api/admin/cases            -> buat kasus (admin)
+PUT  /api/admin/cases/:id        -> ubah kasus (admin)
+DELETE /api/admin/cases/:id      -> hapus kasus (admin)
+GET  /api/admin/visuals?caseId=  -> daftar visual (admin)
+POST /api/admin/visuals/upload   -> upload gambar + metadata (multipart, admin)
+PUT  /api/admin/visuals/:id      -> ubah metadata/annotation (admin)
+DELETE /api/admin/visuals/:id    -> hapus visual + gambar (admin)
 ```
 
 ## Arsitektur & Teknologi
@@ -64,8 +76,11 @@ Cloudflare Worker (Hono)  ->  rute API + fallback Assets
         |                        |
         |                        v
         +--> D1 (SQLite)    public/ (static assets)
-              - diagnostic_sessions
+              - diagnostic_cases    (+ status workflow)
               - diagnostic_evidence
+              - diagnostic_sessions
+              - visual_references   (+ annotations JSON)
+              - visual_images       (BLOB gambar)
               - analytics_visits
               - admin_pages
 ```
@@ -126,7 +141,9 @@ scripts/              test script
    ```bash
    npx wrangler deploy
    ```
-   Hasil: `https://technikit-v3.<subdomain>.workers.dev`
+   Hasil: `https://technikit.<subdomain>.workers.dev` (worker `technikit`)
+
+> **Catatan gambar:** storage gambar saat ini memakai D1 (kolom BLOB). PRD menargetkan R2 — bucket R2 belum bisa dibuat karena R2 belum di-enable di akun (error 10042). Aktifkan R2 lewat dashboard Cloudflare lalu pindahkan storage ke R2 bila diperlukan.
 
 > Catatan Termux Android: `wrangler dev` tidak bisa jalan di Android arm64 (dependency `workerd` tidak menyediakan binary). Gunakan GitHub Actions atau laptop/PC/WSL untuk menjalankan Wrangler.
 
@@ -137,11 +154,11 @@ scripts/              test script
 
 ## Roadmap
 
-- **V3.1** — Admin CRUD kasus + Visual Reference (board image, schematic, connector, pin, test point, annotation, verified status)
-- **V3.2** — Test Point & Pin Database
-- **V3.3** — Board Annotation
-- **V3.4** — Community Contribution + Moderation
-- **V3.5** — Advanced Rule Engine
+- **V3.1 (DONE)** — Status workflow kasus, Visual Reference + annotation, upload gambar, engine baca D1
+- **V3.2** — Rule branching, evidence conditions, fault scoring, fallback search, diagnostic history
+- **V3.3** — Community Contribution + Moderation
+- **V3.4** — Advanced Board Viewer (zoom/pan/pin/test point/layer)
+- **V3.5** — Knowledge Analytics
 - **V4** — Workshop Management
 
 ## Keamanan & catatan produksi
