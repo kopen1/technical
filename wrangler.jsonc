@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "technikit-v3",
+  "name": "technikit",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-04",
   "workers_dev": true,
